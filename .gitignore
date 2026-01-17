@@ -1,0 +1,75 @@
+# iOS Certificates and Keys (sensitive!)
+*.p8
+*.p12
+*.cer
+*.mobileprovision
+AuthKey_*.p8
+
+# Environment files with sensitive data
+.env
+.env.local
+.env.*.local
+
+# Node.js
+server/node_modules/
+server/npm-debug.log*
+server/yarn-debug.log*
+server/yarn-error.log*
+server/logs/
+server/.env
+server/build/
+
+# iOS/Xcode
+InfoDigest/build/
+InfoDigest/*.xcodeproj/xcuserdata/
+InfoDigest/*.xcodeproj/project.xcworkspace/
+InfoDigest/*.xcworkspace/xcuserdata/
+InfoDigest/DerivedData/
+InfoDigest/*.ipa
+InfoDigest/*.dSYM.zip
+InfoDigest/*.dSYM
+InfoDigest/Pods/
+InfoDigest/.DS_Store
+
+# Temporary files
+*.log
+*.tmp
+build_output.log
+build.log
+monitor-and-test-push.sh
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary scripts that contain paths
+auto-build.sh
+one-click-install.sh
+start-real-device-test.sh
+
+# Old/backup files
+*.backup*
+*.bak
+*_backup*
+InfoDigest_source_files/
+
+# Documentation duplicates (keep main READMEs)
+COMPLETED_WORK.md
+DEPLOYMENT_GUIDE.md
+MANUAL_SETUP.md
+PROJECT_STATUS.md
+QUICKSTART.md
+REAL_DEVICE_TESTING.md
+XCODE_SETUP.md

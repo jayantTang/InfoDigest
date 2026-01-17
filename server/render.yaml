@@ -1,0 +1,42 @@
+services:
+  # Web Service
+  - type: web
+    name: infodigest-server
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run migrate
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: NEWS_API_KEY
+        sync: false
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: LLM_PROVIDER
+        value: deepseek
+      - key: ADMIN_API_KEYS
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: infodigest-postgres
+          property: connectionString
+      - key: APNS_KEY_ID
+        sync: false
+      - key: APNS_TEAM_ID
+        sync: false
+      - key: APNS_BUNDLE_ID
+        sync: false
+
+  # PostgreSQL Database
+  - type: pserv
+    name: infodigest-postgres
+    databaseName: infodigest
+    user: infodigest
+    version: "14"
+    plan: free
+    region: oregon
