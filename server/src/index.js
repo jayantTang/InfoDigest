@@ -13,8 +13,10 @@ import portfoliosRouter from './routes/portfolios.js';
 import watchlistsRouter from './routes/watchlists.js';
 import strategiesRouter from './routes/strategies.js';
 import temporaryFocusRouter from './routes/temporaryFocus.js';
+import dataCollectionRouter from './routes/dataCollection.js';
 import TaskScheduler from './services/scheduler.js';
 import { sendTestPush } from './services/pushService.js';
+import { initializeDataCollectors } from './services/dataCollectionInit.js';
 
 const app = express();
 
@@ -86,6 +88,7 @@ app.use('/api/portfolios', apiLimiter, portfoliosRouter);
 app.use('/api/watchlists', apiLimiter, watchlistsRouter);
 app.use('/api/strategies', apiLimiter, strategiesRouter);
 app.use('/api/temporary-focus', apiLimiter, temporaryFocusRouter);
+app.use('/api/data-collection', apiLimiter, dataCollectionRouter);
 
 // Admin/Debug routes (protected in all environments)
 const adminRouter = express.Router();
@@ -139,6 +142,17 @@ async function startServer() {
     app.locals.scheduler = scheduler;
 
     logger.info(`Scheduler started with cron: ${config.cron.schedule}`);
+
+    // Initialize data collectors
+    try {
+      const collectorInit = await initializeDataCollectors();
+      logger.info('Data collectors initialized', collectorInit);
+    } catch (error) {
+      logger.error('Failed to initialize data collectors', {
+        error: error.message,
+      });
+      // Don't fail server startup if collectors fail to init
+    }
 
     // Graceful shutdown
     const shutdown = async () => {
