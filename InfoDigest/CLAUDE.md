@@ -6,72 +6,47 @@
 
 InfoDigest 是一个 iOS 推送通知应用，接收并显示由 Node.js 后端服务器提供的 AI 策划内容摘要（新闻、股票市场数据等）。应用使用 SwiftUI 和 MVVM 架构，通过 Apple Push Notification Service (APNs) 接收通知。
 
-**重要提示：** 这只是 iOS 客户端。服务器代码应该在同级 `server/` 目录中，有独立的 CLAUDE.md。
+**重要提示：** 这只是 iOS 客户端。服务器代码在同级 `server/` 目录中，有独立的 CLAUDE.md。
 
 ## 常用命令
 
-### 构建项目
+### 自动构建（推荐）
 
 ```bash
-# 列出可用的 schemes 和 targets
-xcodebuild -project InfoDigest.xcodeproj -list
-
-# 为 iOS 模拟器构建（Debug）
-xcodebuild -project InfoDigest.xcodeproj \
-  -scheme InfoDigest \
-  -destination 'platform=iOS Simulator,name=iPhone 15' \
-  -configuration Debug build
-
-# 为真机构建（需要设备 ID）
-xcodebuild -project InfoDigest.xcodeproj \
-  -scheme InfoDigest \
-  -destination 'id=YOUR_DEVICE_ID' \
-  -allowProvisioningUpdates \
-  -configuration Debug build
-
-# 清理构建文件夹
-xcodebuild -project InfoDigest.xcodeproj \
-  -scheme InfoDigest \
-  clean
+# 自动构建并安装到iPhone（项目根目录）
+cd /Users/huiminzhang/Bspace/project/1_iphone_app
+./auto-build.sh
 ```
 
-### 运行测试
+脚本会：
+1. 检查服务器状态
+2. 使用xcodebuild编译应用
+3. 使用ios-deploy安装到iPhone
+4. 启动服务器（如果未运行）
 
-```bash
-# 运行单元测试
-xcodebuild test -project InfoDigest.xcodeproj \
-  -scheme InfoDigest \
-  -destination 'platform=iOS Simulator,name=iPhone 15'
-
-# 运行 UI 测试
-xcodebuild test -project InfoDigest.xcodeproj \
-  -scheme InfoDigest \
-  -destination 'platform=iOS Simulator,name=iPhone 15' \
-  -only-testing:InfoDigestUITests
-```
-
-### 开发
+### 手动构建
 
 ```bash
 # 在 Xcode 中打开
 open InfoDigest.xcodeproj
 
-# 自动化设置和构建（需要手动登录 Apple ID）
-./auto-xcode.sh
-
-# 通过 AppleScript 构建并安装到指定设备
-osascript build-and-install.scpt
+# 或使用命令行构建
+xcodebuild -project InfoDigest.xcodeproj \
+  -scheme InfoDigest \
+  -destination 'id=00008120-00012D1A3C80201E' \
+  -configuration Debug \
+  -allowProvisioningUpdates \
+  build
 ```
 
-### 设备设置
+### 测试推送
 
-查找构建所需的设备 ID：
 ```bash
-# 列出已连接的设备
-xcrun xctrace list devices
-
-# 只显示已连接的设备
-xcrun xctrace list devices | grep -m 1 "iPhone"
+# 发送测试推送
+curl -X POST http://localhost:3000/api/admin/test-push \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: dev-admin-key-12345" \
+  -d '{"title":"测试","message":"测试消息"}'
 ```
 
 ## 架构
@@ -176,12 +151,22 @@ private let baseURL = "http://192.168.1.91:3000/api"  // 根据你的网络更�
 **权限配置** (`InfoDigest.entitlements`)：
 ```xml
 <key>aps-environment</key>
-<string>production</string>
+<string>development</string>
 ```
 
 **Bundle Identifier：** `Gaso.InfoDigest`（必须与服务器的 `APNS_BUNDLE_ID` 匹配）
 
-**签名：** 需要 Apple Developer 账户或 Personal Team 进行免费配置
+**Team ID：** `J45TT5R9C6`（付费Apple Developer账号）
+
+**签名：** 需要付费 Apple Developer 账户以使用 Push Notifications capability
+
+### 关键配置信息
+
+- **Bundle ID**: Gaso.InfoDigest
+- **Team ID**: J45TT5R9C6
+- **APNs Key ID**: 4UMWA4C8CJ
+- **最低 iOS 版本**: iOS 26.1
+- **部署目标**: iPhone（真机）
 
 ### 日期解码
 
@@ -240,29 +225,50 @@ enum CodingKeys: String, CodingKey {
 ### 推送通知测试
 
 模拟器无法接收真实的 APNs 通知。测试方法：
-1. 使用真机
+1. 使用真机（必须）
 2. 确保服务器的 `APNS_BUNDLE_ID` 与 app bundle identifier 匹配
 3. 检查设备 token 已注册到服务器的 `devices` 表
 4. 使用服务器的 `/api/admin/test-push` 端点进行手动测试
+
+### 数据库检查
+
+```bash
+# 连接数据库
+psql -h localhost -U huiminzhang -d infodigest
+
+# 查看设备
+SELECT * FROM devices;
+
+# 查看消息
+SELECT * FROM messages ORDER BY created_at DESC LIMIT 10;
+
+# 查看推送日志
+SELECT * FROM push_logs ORDER BY created_at DESC LIMIT 10;
+```
 
 ### 常见问题
 
 **"无法连接服务器" 错误：**
 - 模拟器：验证服务器在 localhost:3000 运行
-- 真机：更新 `baseURL` 的 IP 地址以匹配你的局域网
-- 检查服务器正在运行，可通过 `curl http://<IP>:3000/api/messages` 访问
+- 真机：更新 `baseURL` 的 IP 地址以匹配你的局域网（192.168.1.91）
+- 检查服务器正在运行：`curl http://localhost:3000/health`
 
 **未收到推送通知：**
-- 验证 APNs entitlements 配置正确
+- 验证 APNs entitlements 配置为 development
 - 检查设备 token 已注册到服务器数据库
 - 确保服务器的 `.p8` 密钥凭据与 Apple Developer 账户匹配
-- 生产环境需要有效的 provisioning profile
+- 查看服务器日志：`tail -f server/logs/combined.log`
 
 **构建签名错误：**
+- 确保使用付费 Apple Developer 账号（个人团队不支持Push Notifications）
 - 打开 Xcode：`open InfoDigest.xcodeproj`
 - 进入 Signing & Capabilities
-- 选择你的 Team（免费 Apple ID 使用 Personal Team）
-- 等待自动配置完成
+- 选择正确的 Team (J45TT5R9C6)
+
+**应用无法安装到iPhone：**
+- 确保iPhone已信任此电脑
+- 使用自动构建脚本：`./auto-build.sh`
+- 或使用ios-deploy手动安装
 
 ## 项目结构
 
@@ -271,7 +277,7 @@ InfoDigest/
 ├── InfoDigestApp.swift          # 应用入口点
 ├── AppDelegate.swift            # APNs 回调
 ├── ContentView.swift            # TabView 根视图
-├── InfoDigest.entitlements      # APNs 配置
+├── InfoDigest.entitlements      # APNs 配置 (development)
 ├── Models/
 │   └── Message.swift           # 数据模型 + 示例数据
 ├── ViewModels/
@@ -298,3 +304,27 @@ InfoDigest/
 3. **最低 iOS 版本：** iOS 26.1（在项目设置中配置）
 
 4. **依赖：** 无外部包依赖（仅使用 Apple 框架）
+
+5. **网络要求：** 真机测试时，iPhone和Mac必须在同一局域网
+
+## 快速命令参考
+
+```bash
+# 构建并安装
+./auto-build.sh
+
+# 检查服务器
+curl http://localhost:3000/health
+
+# 查看设备注册
+psql -h localhost -U huiminzhang -d infodigest -c "SELECT * FROM devices;"
+
+# 查看日志
+tail -f server/logs/combined.log
+
+# 发送测试推送
+curl -X POST http://localhost:3000/api/admin/test-push \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: dev-admin-key-12345" \
+  -d '{"title":"测试","message":"测试消息"}'
+```
