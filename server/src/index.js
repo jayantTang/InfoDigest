@@ -8,6 +8,11 @@ import { requireApiKey } from './middleware/auth.js';
 import { apiLimiter, adminLimiter } from './middleware/rateLimiter.js';
 import devicesRouter from './routes/devices.js';
 import messagesRouter from './routes/messages.js';
+import usersRouter from './routes/users.js';
+import portfoliosRouter from './routes/portfolios.js';
+import watchlistsRouter from './routes/watchlists.js';
+import strategiesRouter from './routes/strategies.js';
+import temporaryFocusRouter from './routes/temporaryFocus.js';
 import TaskScheduler from './services/scheduler.js';
 import { sendTestPush } from './services/pushService.js';
 
@@ -70,8 +75,17 @@ app.get('/health', async (req, res) => {
 });
 
 // API Routes with rate limiting
+
+// v1.0 routes (backward compatibility)
 app.use('/api/devices', apiLimiter, devicesRouter);
 app.use('/api/messages', apiLimiter, messagesRouter);
+
+// v2.0 routes
+app.use('/api/users', apiLimiter, usersRouter);
+app.use('/api/portfolios', apiLimiter, portfoliosRouter);
+app.use('/api/watchlists', apiLimiter, watchlistsRouter);
+app.use('/api/strategies', apiLimiter, strategiesRouter);
+app.use('/api/temporary-focus', apiLimiter, temporaryFocusRouter);
 
 // Admin/Debug routes (protected in all environments)
 const adminRouter = express.Router();

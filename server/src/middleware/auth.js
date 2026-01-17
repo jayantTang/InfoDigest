@@ -28,16 +28,45 @@ export const requireApiKey = (req, res, next) => {
 
 /**
  * Device authentication middleware
- * Validates device token for device-specific operations
+ * Validates device token and attaches user info
+ * For v2.0: looks up user by device token
  */
-export const requireDeviceToken = (req, res, next) => {
+export const requireDeviceToken = async (req, res, next) => {
   const deviceToken = req.headers['x-device-token'];
 
   if (!deviceToken) {
     throw new AppError('Device token is required', 401);
   }
 
-  req.deviceToken = deviceToken;
+  // Query database to get user by device token
+  try {
+    const { getUserByDeviceToken } = await import('../services/userService.js');
+    const user = await getUserByDeviceToken(deviceToken);
+
+    if (!user) {
+      throw new AppError('Invalid device token', 401);
+    }
+
+    req.deviceToken = deviceToken;
+    req.user = user;
+    req.userId = user.id;
+    next();
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    throw new AppError('Authentication failed', 500);
+  }
+};
+
+/**
+ * User authentication middleware
+ * Validates user ID (from device token auth)
+ */
+export const requireUser = (req, res, next) => {
+  if (!req.userId) {
+    throw new AppError('User authentication required', 401);
+  }
   next();
 };
 
