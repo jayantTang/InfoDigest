@@ -36,7 +36,6 @@ InfoDigest/.DS_Store
 *.tmp
 build_output.log
 build.log
-monitor-and-test-push.sh
 
 # macOS
 .DS_Store
@@ -54,18 +53,13 @@ Thumbs.db
 *.swo
 *~
 
-# Temporary scripts that contain paths
-auto-build.sh
-one-click-install.sh
-start-real-device-test.sh
-
 # Old/backup files
 *.backup*
 *.bak
 *_backup*
 InfoDigest_source_files/
 
-# Documentation duplicates (keep main READMEs)
+# Documentation duplicates (already deleted)
 COMPLETED_WORK.md
 DEPLOYMENT_GUIDE.md
 MANUAL_SETUP.md
@@ -73,4 +67,13 @@ PROJECT_STATUS.md
 QUICKSTART.md
 REAL_DEVICE_TESTING.md
 XCODE_SETUP.md
-InfoDigest_source_files/
+
+# InfoDigest temporary scripts (already deleted)
+InfoDigest/auto-install.sh
+InfoDigest/auto-xcode.sh
+InfoDigest/build-and-install.scpt
+
+# Server environment duplicates (keep only .env and .env.example)
+server/.env.development
+server/.env.production
+server/.env.test

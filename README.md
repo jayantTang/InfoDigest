@@ -56,7 +56,26 @@ InfoDigest/
     │   └── AuthKey_4UMWA4C8CJ.p8
     ├── logs/                # 日志目录
     └── package.json
+
+├── scripts/               # 统一脚本目录
+│   ├── build-ios.sh       # iOS构建脚本
+│   ├── start-server.sh    # 服务器启动脚本
+│   ├── stop-server.sh     # 服务器停止脚本
+│   ├── test-push.sh       # 推送测试脚本
+│   └── ...
+└── docs/                  # 统一文档目录
+    ├── ios-development.md     # iOS开发指南
+    ├── server-development.md  # 服务器开发指南
+    └── deepseek-integration.md # DeepSeek集成文档
 ```
+
+## 📚 详细文档
+
+项目包含完整的技术文档，位于 `docs/` 目录：
+
+- **[iOS开发指南](docs/ios-development.md)** - iOS客户端开发、构建和调试
+- **[服务器开发指南](docs/server-development.md)** - Node.js服务器架构、API和部署
+- **[DeepSeek集成文档](docs/deepseek-integration.md)** - LLM服务配置和使用
 
 ## 快速开始
 
@@ -98,7 +117,7 @@ npm run dev
 
 ```bash
 # 运行自动构建脚本
-./auto-build.sh
+./scripts/build-ios.sh
 
 # 脚本会：
 # 1. 检查服务器状态
@@ -329,7 +348,7 @@ curl http://localhost:3000/health
 ### iOS构建
 ```bash
 # 自动构建并安装到iPhone
-./auto-build.sh
+./scripts/build-ios.sh
 
 # 清理构建
 rm -rf build/
