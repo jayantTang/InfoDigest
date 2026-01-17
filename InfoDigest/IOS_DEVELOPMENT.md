@@ -1,12 +1,14 @@
-# CLAUDE.md
+# iOS开发指南
 
-本文件为 Claude Code (claude.ai/code) 提供在此代码库中工作的指导。
+InfoDigest iOS客户端的开发和调试指南。
 
 ## 项目概述
 
 InfoDigest 是一个 iOS 推送通知应用，接收并显示由 Node.js 后端服务器提供的 AI 策划内容摘要（新闻、股票市场数据等）。应用使用 SwiftUI 和 MVVM 架构，通过 Apple Push Notification Service (APNs) 接收通知。
 
-**重要提示：** 这只是 iOS 客户端。服务器代码在同级 `server/` 目录中，有独立的 CLAUDE.md。
+**相关文档：**
+- 服务器端文档：`server/CLAUDE.md`
+- 项目总体文档：根目录的 `README.md`和 `CLAUDE.md`
 
 ## 常用命令
 
