@@ -5,6 +5,7 @@
 
 import express from 'express';
 import dataCollector from '../services/dataCollector.js';
+import { pool } from '../config/database.js';
 import { responseHelpers } from '../middleware/responseFormatter.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { requireApiKey } from '../middleware/auth.js';
@@ -71,8 +72,6 @@ router.post(
 router.get(
   '/sources',
   asyncHandler(async (req, res) => {
-    const { default: db } = await import('../config/database.js');
-
     const query = `
       SELECT
         source_name,
@@ -86,7 +85,7 @@ router.get(
       ORDER BY source_name
     `;
 
-    const result = await db.pool.query(query);
+    const result = await pool.query(query);
 
     return res.success({
       sources: result.rows,
@@ -101,8 +100,6 @@ router.get(
 router.get(
   '/health',
   asyncHandler(async (req, res) => {
-    const { default: db } = await import('../config/database.js');
-
     // Get data source stats
     const query = `
       SELECT
@@ -112,14 +109,14 @@ router.get(
       FROM data_source_status
     `;
 
-    const result = await db.pool.query(query);
+    const result = await pool.query(query);
     const stats = result.rows[0];
 
     // Get recent data counts
     const [priceCount, newsCount, cryptoCount] = await Promise.all([
-      db.pool.query("SELECT COUNT(*) as count FROM prices WHERE timestamp >= CURRENT_DATE"),
-      db.pool.query("SELECT COUNT(*) as count FROM news_events WHERE fetched_at >= CURRENT_DATE"),
-      db.pool.query("SELECT COUNT(*) as count FROM crypto_assets WHERE updated_at >= CURRENT_DATE"),
+      pool.query("SELECT COUNT(*) as count FROM prices WHERE timestamp >= CURRENT_DATE"),
+      pool.query("SELECT COUNT(*) as count FROM news_events WHERE fetched_at >= CURRENT_DATE"),
+      pool.query("SELECT COUNT(*) as count FROM crypto_assets WHERE updated_at >= CURRENT_DATE"),
     ]);
 
     const health = {
@@ -148,8 +145,6 @@ router.get(
 router.get(
   '/metrics',
   asyncHandler(async (req, res) => {
-    const { default: db } = await import('../config/database.js');
-
     // Get collection history (last 7 days)
     const query = `
       SELECT
@@ -161,7 +156,7 @@ router.get(
       ORDER BY date DESC
     `;
 
-    const result = await db.pool.query(query);
+    const result = await pool.query(query);
 
     return res.success({
       metrics: result.rows,
