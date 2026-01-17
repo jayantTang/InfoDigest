@@ -16,8 +16,8 @@ InfoDigest 是一个 iOS 推送通知应用，接收并显示由 Node.js 后端�
 ### 自动构建（推荐）
 
 ```bash
-# 自动构建并安装到iPhone（项目根目录）
-cd /Users/huiminzhang/Bspace/project/1_iphone_app
+# 自动构建并安装到iPhone
+cd InfoDigest
 ./scripts/build-ios.sh
 ```
 
@@ -270,7 +270,7 @@ SELECT * FROM push_logs ORDER BY created_at DESC LIMIT 10;
 
 **应用无法安装到iPhone：**
 - 确保iPhone已信任此电脑
-- 使用自动构建脚本：`./scripts/build-ios.sh`
+- 使用自动构建脚本：`cd InfoDigest && ./scripts/build-ios.sh`
 - 或使用ios-deploy手动安装
 
 ## 项目结构
@@ -314,7 +314,7 @@ InfoDigest/
 
 ```bash
 # 构建并安装
-./scripts/build-ios.sh
+cd InfoDigest && ./scripts/build-ios.sh
 
 # 检查服务器
 curl http://localhost:3000/health

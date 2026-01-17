@@ -17,7 +17,7 @@ iOS客户端开发的详细文档已移至项目统一文档目录。
 ### 自动构建（推荐）
 
 ```bash
-# 在项目根目录运行
+# 在InfoDigest目录运行
 ./scripts/build-ios.sh
 ```
 
@@ -38,6 +38,5 @@ open InfoDigest.xcodeproj
 
 ## 🔗 有用的脚本
 
-使用项目根目录的 `scripts/` 目录中的脚本：
-- `../scripts/build-ios.sh` - 构建iOS应用并安装到iPhone
-- `../scripts/test-push.sh` - 测试推送通知
+使用InfoDigest目录的 `scripts/` 子目录中的脚本：
+- `./scripts/build-ios.sh` - 构建iOS应用并安装到iPhone

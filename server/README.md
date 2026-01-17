@@ -41,10 +41,10 @@ npm start
 
 ## 🔗 有用的脚本
 
-使用项目根目录的 `scripts/` 目录中的脚本：
-- `../scripts/start-server.sh` - 启动服务器
-- `../scripts/stop-server.sh` - 停止服务器
-- `../scripts/restart-server.sh` - 重启服务器
-- `../scripts/test-api.sh` - 测试API端点
-- `../scripts/test-push.sh` - 测试推送通知
-- `../scripts/db-shell.sh` - 打开数据库shell
+使用server目录的 `scripts/` 子目录中的脚本：
+- `./scripts/start-server.sh` - 启动服务器
+- `./scripts/stop-server.sh` - 停止服务器
+- `./scripts/restart-server.sh` - 重启服务器
+- `./scripts/test-api.sh` - 测试API端点
+- `./scripts/test-push.sh` - 测试推送通知
+- `./scripts/db-shell.sh` - 打开数据库shell

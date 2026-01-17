@@ -31,13 +31,13 @@
 - 离线开发模式：查看 [iOS开发指南 - 开发模式](./ios-development.md#开发模式)
 
 #### 服务器开发
-- 启动服务器：`./scripts/start-server.sh`
+- 启动服务器：`cd server && ./scripts/start-server.sh`
 - 初始化数据库：`cd server && npm run migrate`
 - 查看日志：`tail -f server/logs/combined.log`
-- API测试：`./scripts/test-api.sh`
+- API测试：`cd server && ./scripts/test-api.sh`
 
 #### 数据库管理
-- 打开数据库shell：`./scripts/db-shell.sh`
+- 打开数据库shell：`cd server && ./scripts/db-shell.sh`
 - 查看设备：查看 [iOS开发指南 - 数据库检查](./ios-development.md#数据库检查)
 
 ### API端点参考
@@ -72,8 +72,13 @@
 ## 开发工具
 
 ### 脚本工具
-项目根目录的 `scripts/` 目录包含常用开发脚本：
-- `build-ios.sh` - 构建iOS应用
+
+项目中的脚本按模块组织：
+
+**iOS脚本** (`InfoDigest/scripts/`):
+- `build-ios.sh` - 构建iOS应用并安装到设备
+
+**服务器脚本** (`server/scripts/`):
 - `start-server.sh` - 启动服务器
 - `stop-server.sh` - 停止服务器
 - `restart-server.sh` - 重启服务器
@@ -81,7 +86,7 @@
 - `test-api.sh` - 测试API端点
 - `db-shell.sh` - 数据库shell
 
-详见 [脚本目录文档](../scripts/README.md)。
+详见各子目录的 `scripts/README.md` 文件。
 
 ## 故障排查
 
