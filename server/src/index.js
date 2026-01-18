@@ -14,9 +14,13 @@ import watchlistsRouter from './routes/watchlists.js';
 import strategiesRouter from './routes/strategies.js';
 import temporaryFocusRouter from './routes/temporaryFocus.js';
 import dataCollectionRouter from './routes/dataCollection.js';
+import monitoringRouter from './routes/monitoring.js';
+import analysisRouter from './routes/analysis.js';
 import TaskScheduler from './services/scheduler.js';
 import { sendTestPush } from './services/pushService.js';
 import { initializeDataCollectors } from './services/dataCollectionInit.js';
+import monitoringEngine from './services/monitoringEngine.js';
+import pushNotificationQueue from './services/pushNotificationQueue.js';
 
 const app = express();
 
@@ -89,6 +93,8 @@ app.use('/api/watchlists', apiLimiter, watchlistsRouter);
 app.use('/api/strategies', apiLimiter, strategiesRouter);
 app.use('/api/temporary-focus', apiLimiter, temporaryFocusRouter);
 app.use('/api/data-collection', apiLimiter, dataCollectionRouter);
+app.use('/api/monitoring', apiLimiter, monitoringRouter);
+app.use('/api/analysis', apiLimiter, analysisRouter);
 
 // Admin/Debug routes (protected in all environments)
 const adminRouter = express.Router();
@@ -154,10 +160,34 @@ async function startServer() {
       // Don't fail server startup if collectors fail to init
     }
 
+    // Start monitoring engine
+    try {
+      monitoringEngine.start();
+      logger.info('Monitoring engine started');
+    } catch (error) {
+      logger.error('Failed to start monitoring engine', {
+        error: error.message,
+      });
+      // Don't fail server startup if monitoring engine fails
+    }
+
+    // Start push notification queue
+    try {
+      pushNotificationQueue.start();
+      logger.info('Push notification queue started');
+    } catch (error) {
+      logger.error('Failed to start push notification queue', {
+        error: error.message,
+      });
+      // Don't fail server startup if queue fails
+    }
+
     // Graceful shutdown
     const shutdown = async () => {
       logger.info('Shutting down gracefully...');
       scheduler.stop();
+      monitoringEngine.stop();
+      pushNotificationQueue.stop();
       server.close(() => {
         logger.info('Server closed');
         process.exit(0);

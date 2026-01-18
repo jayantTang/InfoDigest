@@ -1,15 +1,653 @@
 import Foundation
+import SwiftUI
 
-/// API服务单例
+// MARK: - Platform Enum
+enum Platform: String {
+    case ios = "ios"
+    case android = "android"
+}
+
+// MARK: - Domain Models (defined first to avoid forward references)
+
+struct User: Identifiable, Codable {
+    let id: UUID
+    var email: String?
+    var username: String?
+    var preferences: UserPreferences?
+    var createdAt: Date
+    var updatedAt: Date
+
+    struct UserPreferences: Codable {
+        var pushEnabled: Bool
+        var timezone: String?
+        var currency: String?
+        var language: String?
+
+        enum CodingKeys: String, CodingKey {
+            case pushEnabled = "push_enabled"
+            case timezone
+            case currency
+            case language
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case email
+        case username
+        case preferences
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
+struct PortfolioItem: Identifiable, Codable {
+    let id: UUID
+    let userId: UUID
+    let symbol: String
+    var shares: Double
+    let averageCost: Double
+    let assetType: AssetType
+    var currentPrice: Double?
+    var currentValue: Double?
+    var profitLoss: Double?
+    var profitLossPercent: Double?
+    let createdAt: Date
+    var updatedAt: Date
+
+    enum AssetType: String, Codable {
+        case stock = "stock"
+        case etf = "etf"
+        case crypto = "crypto"
+        case bond = "bond"
+        case other = "other"
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case symbol
+        case shares
+        case averageCost = "average_cost"
+        case assetType = "asset_type"
+        case currentPrice = "current_price"
+        case currentValue = "current_value"
+        case profitLoss = "profit_loss"
+        case profitLossPercent = "profit_loss_percent"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+
+    var totalCost: Double {
+        return shares * averageCost
+    }
+
+    var profitLossColor: Color {
+        guard let pl = profitLossPercent else { return .gray }
+        return pl >= 0 ? .green : .red
+    }
+}
+
+struct WatchlistItem: Identifiable, Codable {
+    let id: UUID
+    let userId: UUID
+    let symbol: String
+    var notes: String?
+    var currentPrice: Double?
+    var changePercent: Double?
+    let createdAt: Date
+    var updatedAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case symbol
+        case notes
+        case currentPrice = "current_price"
+        case changePercent = "change_percent"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+
+    var changeColor: Color {
+        guard let change = changePercent else { return .gray }
+        return change >= 0 ? .green : .red
+    }
+}
+
+struct Strategy: Identifiable, Codable {
+    let id: UUID
+    let userId: UUID
+    let symbol: String
+    var name: String
+    let conditionType: StrategyConditionType
+    var conditions: StrategyConditions
+    let action: StrategyAction
+    var priority: Int
+    var status: StrategyStatus
+    var lastTriggeredAt: Date?
+    var triggerCount: Int
+    let createdAt: Date
+    var updatedAt: Date
+
+    enum StrategyConditionType: String, Codable {
+        case price = "price"
+        case technical = "technical"
+        case news = "news"
+        case time = "time"
+    }
+
+    enum StrategyAction: String, Codable {
+        case notify = "notify"
+        case alert = "alert"
+        case autoTrade = "auto_trade"
+    }
+
+    enum StrategyStatus: String, Codable {
+        case active = "active"
+        case paused = "paused"
+        case disabled = "disabled"
+    }
+
+    struct StrategyConditions: Codable {
+        var priceAbove: Double?
+        var priceBelow: Double?
+        var percentChange: Double?
+        var rsi: RSICondition?
+        var macd: MACDCondition?
+        var bollinger: BollingerCondition?
+        var minImportance: Int?
+        var categories: [String]?
+        var timeRange: TimeRange?
+        var dayOfWeek: Int?
+
+        struct RSICondition: Codable {
+            var above: Double?
+            var below: Double?
+        }
+
+        struct MACDCondition: Codable {
+            var crossoverAbove: Bool?
+            var crossoverBelow: Bool?
+        }
+
+        struct BollingerCondition: Codable {
+            var touchUpper: Bool?
+            var touchLower: Bool?
+        }
+
+        struct TimeRange: Codable {
+            let start: String
+            let end: String
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case symbol
+        case name
+        case conditionType = "condition_type"
+        case conditions
+        case action
+        case priority
+        case status
+        case lastTriggeredAt = "last_triggered_at"
+        case triggerCount = "trigger_count"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
+struct TemporaryFocus: Identifiable, Codable {
+    let id: UUID
+    let userId: UUID
+    let title: String
+    var description: String?
+    let targets: [String]
+    let focus: FocusConfiguration
+    let expiresAt: Date
+    var status: FocusStatus
+    var findings: [String]?
+    var createdAt: Date
+    var updatedAt: Date
+
+    enum FocusStatus: String, Codable {
+        case monitoring = "monitoring"
+        case completed = "completed"
+        case cancelled = "cancelled"
+        case extended = "extended"
+    }
+
+    struct FocusConfiguration: Codable {
+        var newsImpact: Bool
+        var priceReaction: Bool
+        var correlation: Bool
+        var sectorEffect: Bool
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case title
+        case description
+        case targets
+        case focus
+        case expiresAt = "expires_at"
+        case status
+        case findings
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
+struct MonitoringStatus: Codable {
+    let isRunning: Bool
+    let checkInterval: Int
+    let lastCheck: Date?
+    let queueSize: Int
+
+    enum CodingKeys: String, CodingKey {
+        case isRunning = "isRunning"
+        case checkInterval = "checkInterval"
+        case lastCheck = "lastCheck"
+        case queueSize = "queueSize"
+    }
+}
+
+struct MonitoringMetrics: Codable {
+    let strategies: StrategyMetrics
+    let focusItems: FocusMetrics
+    let events: EventMetrics
+}
+
+struct StrategyMetrics: Codable {
+    let totalStrategies: Int
+    let activeStrategies: Int
+    let totalTriggers: Int
+}
+
+struct FocusMetrics: Codable {
+    let totalFocusItems: Int
+    let activeFocusItems: Int
+}
+
+struct EventMetrics: Codable {
+    let totalEvents: Int
+    let criticalEvents: Int
+    let processedEvents: Int
+}
+
+// MARK: - API Response Wrapper
+struct APIResponse<T: Codable>: Codable {
+    let success: Bool
+    let data: T?
+    let error: String?
+    let message: String?
+}
+
+// MARK: - Response Data Types (can now reference domain models)
+struct DeviceRegistrationResponse: Codable {
+    let userId: UUID
+    let deviceId: UUID
+    let message: String
+}
+
+struct UserData: Codable {
+    let user: User
+}
+
+struct PortfolioData: Codable {
+    let items: [PortfolioItem]
+}
+
+struct PortfolioItemData: Codable {
+    let item: PortfolioItem
+}
+
+struct WatchlistData: Codable {
+    let items: [WatchlistItem]
+}
+
+struct WatchlistItemData: Codable {
+    let item: WatchlistItem
+}
+
+struct StrategiesData: Codable {
+    let strategies: [Strategy]
+}
+
+struct StrategyData: Codable {
+    let strategy: Strategy
+}
+
+struct FocusData: Codable {
+    let focusItems: [TemporaryFocus]
+}
+
+struct FocusItemData: Codable {
+    let focusItem: TemporaryFocus
+}
+
+struct MonitoringData: Codable {
+    let monitoring: MonitoringStatus
+}
+
+// MARK: - Message Response Types (v1 compatibility)
+private struct MessageResponse: Codable {
+    let success: Bool
+    let data: MessageData
+}
+
+private struct MessageData: Codable {
+    let messages: [Message]
+    let pagination: Pagination
+}
+
+private struct Pagination: Codable {
+    let page: Int
+    let limit: Int
+    let total: Int
+    let totalPages: Int
+}
+
+// MARK: - API Service
+
+struct User: Identifiable, Codable {
+    let id: UUID
+    var email: String?
+    var username: String?
+    var preferences: UserPreferences?
+    var createdAt: Date
+    var updatedAt: Date
+
+    struct UserPreferences: Codable {
+        var pushEnabled: Bool
+        var timezone: String?
+        var currency: String?
+        var language: String?
+
+        enum CodingKeys: String, CodingKey {
+            case pushEnabled = "push_enabled"
+            case timezone
+            case currency
+            case language
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case email
+        case username
+        case preferences
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
+struct PortfolioItem: Identifiable, Codable {
+    let id: UUID
+    let userId: UUID
+    let symbol: String
+    var shares: Double
+    let averageCost: Double
+    let assetType: AssetType
+    var currentPrice: Double?
+    var currentValue: Double?
+    var profitLoss: Double?
+    var profitLossPercent: Double?
+    let createdAt: Date
+    var updatedAt: Date
+
+    enum AssetType: String, Codable {
+        case stock = "stock"
+        case etf = "etf"
+        case crypto = "crypto"
+        case bond = "bond"
+        case other = "other"
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case symbol
+        case shares
+        case averageCost = "average_cost"
+        case assetType = "asset_type"
+        case currentPrice = "current_price"
+        case currentValue = "current_value"
+        case profitLoss = "profit_loss"
+        case profitLossPercent = "profit_loss_percent"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+
+    var totalCost: Double {
+        return shares * averageCost
+    }
+
+    var profitLossColor: Color {
+        guard let pl = profitLossPercent else { return .gray }
+        return pl >= 0 ? .green : .red
+    }
+}
+
+struct WatchlistItem: Identifiable, Codable {
+    let id: UUID
+    let userId: UUID
+    let symbol: String
+    var notes: String?
+    var currentPrice: Double?
+    var changePercent: Double?
+    let createdAt: Date
+    var updatedAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case symbol
+        case notes
+        case currentPrice = "current_price"
+        case changePercent = "change_percent"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+
+    var changeColor: Color {
+        guard let change = changePercent else { return .gray }
+        return change >= 0 ? .green : .red
+    }
+}
+
+struct Strategy: Identifiable, Codable {
+    let id: UUID
+    let userId: UUID
+    let symbol: String
+    var name: String
+    let conditionType: ConditionType
+    var conditions: StrategyConditions
+    let action: StrategyAction
+    var priority: Int
+    var status: StrategyStatus
+    var lastTriggeredAt: Date?
+    var triggerCount: Int
+    let createdAt: Date
+    var updatedAt: Date
+
+    enum ConditionType: String, Codable {
+        case price = "price"
+        case technical = "technical"
+        case news = "news"
+        case time = "time"
+    }
+
+    enum StrategyAction: String, Codable {
+        case notify = "notify"
+        case alert = "alert"
+        case autoTrade = "auto_trade"
+    }
+
+    enum StrategyStatus: String, Codable {
+        case active = "active"
+        case paused = "paused"
+        case disabled = "disabled"
+    }
+
+    struct StrategyConditions: Codable {
+        var priceAbove: Double?
+        var priceBelow: Double?
+        var percentChange: Double?
+        var rsi: RSICondition?
+        var macd: MACDCondition?
+        var bollinger: BollingerCondition?
+        var minImportance: Int?
+        var categories: [String]?
+        var timeRange: TimeRange?
+        var dayOfWeek: Int?
+
+        struct RSICondition: Codable {
+            var above: Double?
+            var below: Double?
+        }
+
+        struct MACDCondition: Codable {
+            var crossoverAbove: Bool?
+            var crossoverBelow: Bool?
+        }
+
+        struct BollingerCondition: Codable {
+            var touchUpper: Bool?
+            var touchLower: Bool?
+        }
+
+        struct TimeRange: Codable {
+            let start: String
+            let end: String
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case symbol
+        case name
+        case conditionType = "condition_type"
+        case conditions
+        case action
+        case priority
+        case status
+        case lastTriggeredAt = "last_triggered_at"
+        case triggerCount = "trigger_count"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
+struct TemporaryFocus: Identifiable, Codable {
+    let id: UUID
+    let userId: UUID
+    let title: String
+    var description: String?
+    let targets: [String]
+    let focus: FocusConfiguration
+    let expiresAt: Date
+    var status: FocusStatus
+    var findings: [String]?
+    var createdAt: Date
+    var updatedAt: Date
+
+    enum FocusStatus: String, Codable {
+        case monitoring = "monitoring"
+        case completed = "completed"
+        case cancelled = "cancelled"
+        case extended = "extended"
+    }
+
+    struct FocusConfiguration: Codable {
+        var newsImpact: Bool
+        var priceReaction: Bool
+        var correlation: Bool
+        var sectorEffect: Bool
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case title
+        case description
+        case targets
+        case focus
+        case expiresAt = "expires_at"
+        case status
+        case findings
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
+struct MonitoringStatus: Codable {
+    let isRunning: Bool
+    let checkInterval: Int
+    let lastCheck: Date?
+    let queueSize: Int
+
+    enum CodingKeys: String, CodingKey {
+        case isRunning = "isRunning"
+        case checkInterval = "checkInterval"
+        case lastCheck = "lastCheck"
+        case queueSize = "queueSize"
+    }
+}
+
+struct MonitoringMetrics: Codable {
+    let strategies: StrategyMetrics
+    let focusItems: FocusMetrics
+    let events: EventMetrics
+}
+
+struct StrategyMetrics: Codable {
+    let totalStrategies: Int
+    let activeStrategies: Int
+    let totalTriggers: Int
+}
+
+struct FocusMetrics: Codable {
+    let totalFocusItems: Int
+    let activeFocusItems: Int
+}
+
+struct EventMetrics: Codable {
+    let totalEvents: Int
+    let criticalEvents: Int
+    let processedEvents: Int
+}
+
+// MARK: - Message Response Types (v1 compatibility)
+private struct MessageResponse: Codable {
+    let success: Bool
+    let data: MessageData
+}
+
+private struct MessageData: Codable {
+    let messages: [Message]
+    let pagination: Pagination
+}
+
+private struct Pagination: Codable {
+    let page: Int
+    let limit: Int
+    let total: Int
+    let totalPages: Int
+}
+
+// MARK: - API Service
 class APIService {
     static let shared = APIService()
 
     // 根据运行环境自动选择服务器地址
     #if targetEnvironment(simulator)
-    // 模拟器使用 localhost
     private let baseURL = "http://localhost:3000/api"
     #else
-    // 真机使用局域网 IP（请根据实际情况修改）
     private let baseURL = "http://192.168.1.91:3000/api"
     #endif
 
@@ -17,7 +655,31 @@ class APIService {
 
     private init() {}
 
-    /// 注册设备token
+    private var decoder: JSONDecoder {
+        let decoder = JSONDecoder()
+        let dateFormatter = ISO8601DateFormatter()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let dateString = try container.decode(String.self)
+
+            if let date = dateFormatter.date(from: dateString) {
+                return date
+            }
+
+            let fallbackFormatter = DateFormatter()
+            fallbackFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"
+            if let date = fallbackFormatter.date(from: dateString) {
+                return date
+            }
+
+            throw APIError.decodingError
+        }
+        return decoder
+    }
+
+    // MARK: - v1.0 API Methods
+
+    /// 注册设备token (v1)
     func registerDevice(token: String) async throws {
         let url = URL(string: "\(baseURL)/devices/register")!
         var request = URLRequest(url: url)
@@ -58,28 +720,6 @@ class APIService {
             throw APIError.invalidResponse
         }
 
-        // 使用自定义日期解码器
-        let decoder = JSONDecoder()
-        let dateFormatter = ISO8601DateFormatter()
-        decoder.dateDecodingStrategy = .custom { decoder in
-            let container = try decoder.singleValueContainer()
-            let dateString = try container.decode(String.self)
-
-            // 尝试 ISO8601 格式
-            if let date = dateFormatter.date(from: dateString) {
-                return date
-            }
-
-            // 尝试其他格式
-            let fallbackFormatter = DateFormatter()
-            fallbackFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"
-            if let date = fallbackFormatter.date(from: dateString) {
-                return date
-            }
-
-            throw APIError.decodingError
-        }
-
         let result = try decoder.decode(MessageResponse.self, from: data)
         return result.data.messages
     }
@@ -111,6 +751,279 @@ class APIService {
             throw APIError.invalidResponse
         }
     }
+
+    // MARK: - v2.0 API Methods
+
+    /// 注册设备token（v2版本，返回用户ID）
+    func registerDeviceV2(token: String, platform: Platform = .ios, appVersion: String? = nil, osVersion: String? = nil) async throws -> DeviceRegistrationResponse {
+        var request = URLRequest(url: URL(string: "\(baseURL)/devices/register")!)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        var body: [String: Any] = [
+            "deviceToken": token,
+            "platform": platform.rawValue
+        ]
+
+        if let appVersion = appVersion {
+            body["appVersion"] = appVersion
+        }
+        if let osVersion = osVersion {
+            body["osVersion"] = osVersion
+        }
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, _) = try await session.data(for: request)
+        return try decoder.decode(APIResponse<DeviceRegistrationResponse>.self, from: data).data!
+    }
+
+    /// 获取用户信息
+    func getUser(id: UUID) async throws -> User {
+        let (data, _) = try await fetchData(endpoint: "/users/\(id.uuidString)")
+        let response = try decoder.decode(APIResponse<UserData>.self, from: data)
+        return response.data!.user
+    }
+
+    /// 更新用户偏好
+    func updateUserPreferences(id: UUID, preferences: User.UserPreferences) async throws {
+        var request = URLRequest(url: URL(string: "\(baseURL)/users/\(id.uuidString)/preferences")!)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+            "preferences": [
+                "push_enabled": preferences.pushEnabled,
+                "timezone": preferences.timezone ?? "",
+                "currency": preferences.currency ?? "",
+                "language": preferences.language ?? ""
+            ]
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (_, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.invalidResponse
+        }
+    }
+
+    /// 获取投资组合
+    func getPortfolio(userId: UUID) async throws -> [PortfolioItem] {
+        let (data, _) = try await fetchData(endpoint: "/portfolios?user_id=\(userId.uuidString)")
+        let response = try decoder.decode(APIResponse<PortfolioData>.self, from: data)
+        return response.data!.items
+    }
+
+    /// 添加持仓
+    func addPortfolioItem(userId: UUID, symbol: String, shares: Double, averageCost: Double, assetType: String = "stock") async throws -> PortfolioItem {
+        var request = URLRequest(url: URL(string: "\(baseURL)/portfolios/items")!)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+            "userId": userId.uuidString,
+            "symbol": symbol.uppercased(),
+            "shares": shares,
+            "averageCost": averageCost,
+            "assetType": assetType
+        ]
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, _) = try await session.data(for: request)
+        let response = try decoder.decode(APIResponse<PortfolioItemData>.self, from: data)
+        return response.data!.item
+    }
+
+    /// 删除持仓
+    func deletePortfolioItem(id: UUID) async throws {
+        var request = URLRequest(url: URL(string: "\(baseURL)/portfolios/items/\(id.uuidString)")!)
+        request.httpMethod = "DELETE"
+
+        let (_, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.invalidResponse
+        }
+    }
+
+    /// 获取关注列表
+    func getWatchlist(userId: UUID) async throws -> [WatchlistItem] {
+        let (data, _) = try await fetchData(endpoint: "/watchlists?user_id=\(userId.uuidString)")
+        let response = try decoder.decode(APIResponse<WatchlistData>.self, from: data)
+        return response.data!.items
+    }
+
+    /// 添加关注
+    func addWatchlistItem(userId: UUID, symbol: String, notes: String? = nil) async throws -> WatchlistItem {
+        var request = URLRequest(url: URL(string: "\(baseURL)/watchlists/items")!)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        var body: [String: Any] = [
+            "userId": userId.uuidString,
+            "symbol": symbol.uppercased()
+        ]
+
+        if let notes = notes {
+            body["notes"] = notes
+        }
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, _) = try await session.data(for: request)
+        let response = try decoder.decode(APIResponse<WatchlistItemData>.self, from: data)
+        return response.data!.item
+    }
+
+    /// 删除关注
+    func deleteWatchlistItem(id: UUID) async throws {
+        var request = URLRequest(url: URL(string: "\(baseURL)/watchlists/items/\(id.uuidString)")!)
+        request.httpMethod = "DELETE"
+
+        let (_, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.invalidResponse
+        }
+    }
+
+    /// 获取策略列表
+    func getStrategies(userId: UUID? = nil) async throws -> [Strategy] {
+        var endpoint = "/strategies"
+        if let userId = userId {
+            endpoint += "?user_id=\(userId.uuidString)"
+        }
+
+        let (data, _) = try await fetchData(endpoint: endpoint)
+        let response = try decoder.decode(APIResponse<StrategiesData>.self, from: data)
+        return response.data!.strategies
+    }
+
+    /// 创建策略
+    func createStrategy(userId: UUID, symbol: String, name: String, conditionType: String, conditions: [String: Any], priority: Int = 50) async throws -> Strategy {
+        var request = URLRequest(url: URL(string: "\(baseURL)/strategies")!)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+            "userId": userId.uuidString,
+            "symbol": symbol.uppercased(),
+            "name": name,
+            "conditionType": conditionType,
+            "conditions": conditions,
+            "action": "notify",
+            "priority": priority
+        ]
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, _) = try await session.data(for: request)
+        let response = try decoder.decode(APIResponse<StrategyData>.self, from: data)
+        return response.data!.strategy
+    }
+
+    /// 更新策略状态
+    func updateStrategyStatus(id: UUID, status: String) async throws {
+        var request = URLRequest(url: URL(string: "\(baseURL)/strategies/\(id.uuidString)/status")!)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body = ["status": status]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (_, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.invalidResponse
+        }
+    }
+
+    /// 删除策略
+    func deleteStrategy(id: UUID) async throws {
+        var request = URLRequest(url: URL(string: "\(baseURL)/strategies/\(id.uuidString)")!)
+        request.httpMethod = "DELETE"
+
+        let (_, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.invalidResponse
+        }
+    }
+
+    /// 获取临时关注列表
+    func getTemporaryFocus(userId: UUID) async throws -> [TemporaryFocus] {
+        let (data, _) = try await fetchData(endpoint: "/temporary-focus?user_id=\(userId.uuidString)")
+        let response = try decoder.decode(APIResponse<FocusData>.self, from: data)
+        return response.data!.focusItems
+    }
+
+    /// 创建临时关注
+    func createTemporaryFocus(userId: UUID, title: String, description: String?, targets: [String], focus: [String: Bool], expiresAt: String) async throws -> TemporaryFocus {
+        var request = URLRequest(url: URL(string: "\(baseURL)/temporary-focus")!)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        var body: [String: Any] = [
+            "userId": userId.uuidString,
+            "title": title,
+            "targets": targets.map { $0.uppercased() },
+            "focus": focus,
+            "expiresAt": expiresAt
+        ]
+
+        if let desc = description {
+            body["description"] = desc
+        }
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, _) = try await session.data(for: request)
+        let response = try decoder.decode(APIResponse<FocusItemData>.self, from: data)
+        return response.data!.focusItem
+    }
+
+    /// 删除临时关注
+    func deleteTemporaryFocus(id: UUID) async throws {
+        var request = URLRequest(url: URL(string: "\(baseURL)/temporary-focus/\(id.uuidString)")!)
+        request.httpMethod = "DELETE"
+
+        let (_, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.invalidResponse
+        }
+    }
+
+    /// 获取监控状态
+    func getMonitoringStatus() async throws -> MonitoringStatus {
+        let (data, _) = try await fetchData(endpoint: "/monitoring/status")
+        let response = try decoder.decode(APIResponse<MonitoringData>.self, from: data)
+        return response.data!.monitoring
+    }
+
+    /// 获取监控指标
+    func getMonitoringMetrics() async throws -> MonitoringMetrics {
+        let (data, _) = try await fetchData(endpoint: "/monitoring/metrics")
+        return try decoder.decode(APIResponse<MonitoringMetrics>.self, from: data).data!
+    }
+
+    // MARK: - Helper Methods
+
+    private func fetchData(endpoint: String) async throws -> (Data, URLResponse) {
+        guard let url = URL(string: "\(baseURL)\(endpoint)") else {
+            throw APIError.invalidURL
+        }
+
+        return try await session.data(from: url)
+    }
 }
 
 // MARK: - API Error
@@ -132,22 +1045,4 @@ enum APIError: Error, LocalizedError {
             return "网络错误: \(error.localizedDescription)"
         }
     }
-}
-
-// MARK: - Response Models
-private struct MessageResponse: Codable {
-    let success: Bool
-    let data: MessageData
-}
-
-private struct MessageData: Codable {
-    let messages: [Message]
-    let pagination: Pagination
-}
-
-private struct Pagination: Codable {
-    let page: Int
-    let limit: Int
-    let total: Int
-    let totalPages: Int
 }
