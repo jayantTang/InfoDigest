@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct SettingsView: View {
+struct SettingsView_v1: View {
     @EnvironmentObject var pushNotificationManager: PushNotificationManager
     @AppStorage("pushEnabled") private var pushEnabled = true
     @AppStorage("quietHoursEnabled") private var quietHoursEnabled = false
@@ -165,6 +165,6 @@ struct AboutView: View {
 }
 
 #Preview {
-    SettingsView()
+    SettingsView_v1()
         .environmentObject(PushNotificationManager())
 }

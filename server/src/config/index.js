@@ -48,4 +48,11 @@ export default {
   cron: {
     schedule: process.env.CRON_SCHEDULE || '0 * * * *',
   },
+
+  marketEvents: {
+    enabled: process.env.MARKET_EVENTS_ENABLED !== 'false',
+    schedule: process.env.MARKET_EVENTS_SCHEDULE || '0 * * * *',
+    minScore: parseInt(process.env.MARKET_EVENTS_MIN_SCORE) || 60,
+    hours: parseInt(process.env.MARKET_EVENTS_HOURS) || 1,
+  },
 };

@@ -16,11 +16,13 @@ import temporaryFocusRouter from './routes/temporaryFocus.js';
 import dataCollectionRouter from './routes/dataCollection.js';
 import monitoringRouter from './routes/monitoring.js';
 import analysisRouter from './routes/analysis.js';
+import marketEventsRouter from './routes/marketEvents.js';
 import TaskScheduler from './services/scheduler.js';
 import { sendTestPush } from './services/pushService.js';
 import { initializeDataCollectors } from './services/dataCollectionInit.js';
 import monitoringEngine from './services/monitoringEngine.js';
 import pushNotificationQueue from './services/pushNotificationQueue.js';
+import { MarketEventsScheduler } from './services/marketEventsScheduler.js';
 
 const app = express();
 
@@ -95,6 +97,7 @@ app.use('/api/temporary-focus', apiLimiter, temporaryFocusRouter);
 app.use('/api/data-collection', apiLimiter, dataCollectionRouter);
 app.use('/api/monitoring', apiLimiter, monitoringRouter);
 app.use('/api/analysis', apiLimiter, analysisRouter);
+app.use('/api/market-events', apiLimiter, marketEventsRouter);
 
 // Admin/Debug routes (protected in all environments)
 const adminRouter = express.Router();
@@ -113,6 +116,16 @@ adminRouter.post('/run-digest', async (req, res, next) => {
   try {
     const scheduler = req.app.locals.scheduler;
     const result = await scheduler.runOnce();
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+});
+
+adminRouter.post('/run-market-events', async (req, res, next) => {
+  try {
+    const marketEventsScheduler = req.app.locals.marketEventsScheduler;
+    const result = await marketEventsScheduler.runOnce();
     res.json({ success: true, data: result });
   } catch (error) {
     next(error);
@@ -148,6 +161,14 @@ async function startServer() {
     app.locals.scheduler = scheduler;
 
     logger.info(`Scheduler started with cron: ${config.cron.schedule}`);
+
+    // Initialize and start market events scheduler
+    const marketEventsSchedule = config.marketEvents?.schedule || '0 * * * *';
+    const marketEventsScheduler = new MarketEventsScheduler(marketEventsSchedule);
+    marketEventsScheduler.start(true); // Run immediately on first start
+    app.locals.marketEventsScheduler = marketEventsScheduler;
+
+    logger.info(`Market events scheduler started with cron: ${marketEventsSchedule}`);
 
     // Initialize data collectors
     try {
@@ -186,6 +207,7 @@ async function startServer() {
     const shutdown = async () => {
       logger.info('Shutting down gracefully...');
       scheduler.stop();
+      marketEventsScheduler.stop();
       monitoringEngine.stop();
       pushNotificationQueue.stop();
       server.close(() => {

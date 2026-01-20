@@ -122,14 +122,10 @@ class MonitoringEngine {
           s.condition_type,
           s.conditions,
           s.action,
-          s.priority,
-          u.push_token,
-          u.preferences
+          s.priority
         FROM strategies s
         JOIN users u ON s.user_id = u.id
         WHERE s.status = 'active'
-          AND u.push_enabled = true
-          AND u.push_token IS NOT NULL
         ORDER BY s.priority DESC
       `;
 
@@ -586,14 +582,9 @@ class MonitoringEngine {
           tf.title,
           tf.targets,
           tf.focus,
-          tf.expires_at,
-          u.push_token,
-          u.preferences
+          tf.expires_at
         FROM temporary_focus tf
-        JOIN users u ON tf.user_id = u.id
         WHERE tf.status = 'monitoring'
-          AND u.push_enabled = true
-          AND u.push_token IS NOT NULL
         ORDER BY tf.created_at DESC
       `;
 
@@ -948,29 +939,21 @@ class MonitoringEngine {
         const query = `
           SELECT DISTINCT
             u.id as user_id,
-            u.push_token,
-            u.push_enabled,
             p.symbol,
             'portfolio' as relevance_type
           FROM users u
-          JOIN portfolio_items p ON u.id = p.user_id
+          JOIN portfolios p ON u.id = p.user_id
           WHERE p.symbol = $1
-            AND u.push_enabled = true
-            AND u.push_token IS NOT NULL
 
           UNION
 
           SELECT DISTINCT
             u.id as user_id,
-            u.push_token,
-            u.push_enabled,
             w.symbol,
             'watchlist' as relevance_type
           FROM users u
-          JOIN watchlist_items w ON u.id = w.user_id
+          JOIN watchlists w ON u.id = w.user_id
           WHERE w.symbol = $1
-            AND u.push_enabled = true
-            AND u.push_token IS NOT NULL
         `;
 
         const result = await pool.query(query, [symbol]);
@@ -981,7 +964,6 @@ class MonitoringEngine {
           if (!existing) {
             relevantUsers.push({
               user_id: row.user_id,
-              push_token: row.push_token,
               symbol: row.symbol,
               relevanceType: row.relevance_type,
             });
@@ -994,15 +976,11 @@ class MonitoringEngine {
         const query = `
           SELECT DISTINCT
             u.id as user_id,
-            u.push_token,
-            u.push_enabled,
             $1::text as symbol,
             'sector' as relevance_type
           FROM users u
           JOIN temporary_focus tf ON u.id = tf.user_id
           WHERE $1 = ANY(tf.targets)
-            AND u.push_enabled = true
-            AND u.push_token IS NOT NULL
             AND tf.status = 'monitoring'
         `;
 
@@ -1013,7 +991,6 @@ class MonitoringEngine {
           if (!existing) {
             relevantUsers.push({
               user_id: row.user_id,
-              push_token: row.push_token,
               symbol: sector,
               relevanceType: 'sector',
             });

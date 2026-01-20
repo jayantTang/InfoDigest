@@ -352,310 +352,21 @@ private struct Pagination: Codable {
 }
 
 // MARK: - API Service
-
-struct User: Identifiable, Codable {
-    let id: UUID
-    var email: String?
-    var username: String?
-    var preferences: UserPreferences?
-    var createdAt: Date
-    var updatedAt: Date
-
-    struct UserPreferences: Codable {
-        var pushEnabled: Bool
-        var timezone: String?
-        var currency: String?
-        var language: String?
-
-        enum CodingKeys: String, CodingKey {
-            case pushEnabled = "push_enabled"
-            case timezone
-            case currency
-            case language
-        }
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case email
-        case username
-        case preferences
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-    }
-}
-
-struct PortfolioItem: Identifiable, Codable {
-    let id: UUID
-    let userId: UUID
-    let symbol: String
-    var shares: Double
-    let averageCost: Double
-    let assetType: AssetType
-    var currentPrice: Double?
-    var currentValue: Double?
-    var profitLoss: Double?
-    var profitLossPercent: Double?
-    let createdAt: Date
-    var updatedAt: Date
-
-    enum AssetType: String, Codable {
-        case stock = "stock"
-        case etf = "etf"
-        case crypto = "crypto"
-        case bond = "bond"
-        case other = "other"
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case userId = "user_id"
-        case symbol
-        case shares
-        case averageCost = "average_cost"
-        case assetType = "asset_type"
-        case currentPrice = "current_price"
-        case currentValue = "current_value"
-        case profitLoss = "profit_loss"
-        case profitLossPercent = "profit_loss_percent"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-    }
-
-    var totalCost: Double {
-        return shares * averageCost
-    }
-
-    var profitLossColor: Color {
-        guard let pl = profitLossPercent else { return .gray }
-        return pl >= 0 ? .green : .red
-    }
-}
-
-struct WatchlistItem: Identifiable, Codable {
-    let id: UUID
-    let userId: UUID
-    let symbol: String
-    var notes: String?
-    var currentPrice: Double?
-    var changePercent: Double?
-    let createdAt: Date
-    var updatedAt: Date
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case userId = "user_id"
-        case symbol
-        case notes
-        case currentPrice = "current_price"
-        case changePercent = "change_percent"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-    }
-
-    var changeColor: Color {
-        guard let change = changePercent else { return .gray }
-        return change >= 0 ? .green : .red
-    }
-}
-
-struct Strategy: Identifiable, Codable {
-    let id: UUID
-    let userId: UUID
-    let symbol: String
-    var name: String
-    let conditionType: ConditionType
-    var conditions: StrategyConditions
-    let action: StrategyAction
-    var priority: Int
-    var status: StrategyStatus
-    var lastTriggeredAt: Date?
-    var triggerCount: Int
-    let createdAt: Date
-    var updatedAt: Date
-
-    enum ConditionType: String, Codable {
-        case price = "price"
-        case technical = "technical"
-        case news = "news"
-        case time = "time"
-    }
-
-    enum StrategyAction: String, Codable {
-        case notify = "notify"
-        case alert = "alert"
-        case autoTrade = "auto_trade"
-    }
-
-    enum StrategyStatus: String, Codable {
-        case active = "active"
-        case paused = "paused"
-        case disabled = "disabled"
-    }
-
-    struct StrategyConditions: Codable {
-        var priceAbove: Double?
-        var priceBelow: Double?
-        var percentChange: Double?
-        var rsi: RSICondition?
-        var macd: MACDCondition?
-        var bollinger: BollingerCondition?
-        var minImportance: Int?
-        var categories: [String]?
-        var timeRange: TimeRange?
-        var dayOfWeek: Int?
-
-        struct RSICondition: Codable {
-            var above: Double?
-            var below: Double?
-        }
-
-        struct MACDCondition: Codable {
-            var crossoverAbove: Bool?
-            var crossoverBelow: Bool?
-        }
-
-        struct BollingerCondition: Codable {
-            var touchUpper: Bool?
-            var touchLower: Bool?
-        }
-
-        struct TimeRange: Codable {
-            let start: String
-            let end: String
-        }
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case userId = "user_id"
-        case symbol
-        case name
-        case conditionType = "condition_type"
-        case conditions
-        case action
-        case priority
-        case status
-        case lastTriggeredAt = "last_triggered_at"
-        case triggerCount = "trigger_count"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-    }
-}
-
-struct TemporaryFocus: Identifiable, Codable {
-    let id: UUID
-    let userId: UUID
-    let title: String
-    var description: String?
-    let targets: [String]
-    let focus: FocusConfiguration
-    let expiresAt: Date
-    var status: FocusStatus
-    var findings: [String]?
-    var createdAt: Date
-    var updatedAt: Date
-
-    enum FocusStatus: String, Codable {
-        case monitoring = "monitoring"
-        case completed = "completed"
-        case cancelled = "cancelled"
-        case extended = "extended"
-    }
-
-    struct FocusConfiguration: Codable {
-        var newsImpact: Bool
-        var priceReaction: Bool
-        var correlation: Bool
-        var sectorEffect: Bool
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case userId = "user_id"
-        case title
-        case description
-        case targets
-        case focus
-        case expiresAt = "expires_at"
-        case status
-        case findings
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-    }
-}
-
-struct MonitoringStatus: Codable {
-    let isRunning: Bool
-    let checkInterval: Int
-    let lastCheck: Date?
-    let queueSize: Int
-
-    enum CodingKeys: String, CodingKey {
-        case isRunning = "isRunning"
-        case checkInterval = "checkInterval"
-        case lastCheck = "lastCheck"
-        case queueSize = "queueSize"
-    }
-}
-
-struct MonitoringMetrics: Codable {
-    let strategies: StrategyMetrics
-    let focusItems: FocusMetrics
-    let events: EventMetrics
-}
-
-struct StrategyMetrics: Codable {
-    let totalStrategies: Int
-    let activeStrategies: Int
-    let totalTriggers: Int
-}
-
-struct FocusMetrics: Codable {
-    let totalFocusItems: Int
-    let activeFocusItems: Int
-}
-
-struct EventMetrics: Codable {
-    let totalEvents: Int
-    let criticalEvents: Int
-    let processedEvents: Int
-}
-
-// MARK: - Message Response Types (v1 compatibility)
-private struct MessageResponse: Codable {
-    let success: Bool
-    let data: MessageData
-}
-
-private struct MessageData: Codable {
-    let messages: [Message]
-    let pagination: Pagination
-}
-
-private struct Pagination: Codable {
-    let page: Int
-    let limit: Int
-    let total: Int
-    let totalPages: Int
-}
-
-// MARK: - API Service
 class APIService {
     static let shared = APIService()
 
     // 根据运行环境自动选择服务器地址
     #if targetEnvironment(simulator)
-    private let baseURL = "http://localhost:3000/api"
+    internal let baseURL = "http://localhost:3000/api"
     #else
-    private let baseURL = "http://192.168.1.91:3000/api"
+    internal let baseURL = "http://192.168.1.93:3000/api"
     #endif
 
     private let session = URLSession.shared
 
     private init() {}
 
-    private var decoder: JSONDecoder {
+    internal var decoder: JSONDecoder {
         let decoder = JSONDecoder()
         let dateFormatter = ISO8601DateFormatter()
         decoder.dateDecodingStrategy = .custom { decoder in
@@ -1023,6 +734,136 @@ class APIService {
         }
 
         return try await session.data(from: url)
+    }
+}
+
+// MARK: - Analysis Types
+
+struct StrategyTrigger: Identifiable, Codable {
+    let id: UUID
+    let strategyId: UUID
+    let symbol: String
+    let conditionType: Strategy.StrategyConditionType
+    let triggerReason: String
+    let marketData: String?
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case strategyId = "strategy_id"
+        case symbol
+        case conditionType = "condition_type"
+        case triggerReason = "trigger_reason"
+        case marketData = "market_data"
+        case createdAt = "created_at"
+    }
+}
+
+struct StrategyAnalysis: Identifiable, Codable {
+    let id: UUID
+    let strategyId: UUID
+    let userId: UUID
+    let title: String
+    let triggerReason: String?
+    let marketContext: String?
+    let technicalAnalysis: String?
+    let riskAssessment: String?
+    let actionSuggestion: String?
+    let confidence: Int?
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case strategyId = "strategy_id"
+        case userId = "user_id"
+        case title
+        case triggerReason = "trigger_reason"
+        case marketContext = "market_context"
+        case technicalAnalysis = "technical_analysis"
+        case riskAssessment = "risk_assessment"
+        case actionSuggestion = "action_suggestion"
+        case confidence
+        case createdAt = "created_at"
+    }
+}
+
+struct FocusFinding: Identifiable, Codable {
+    let id: UUID
+    let focusItemId: UUID
+    let title: String
+    let description: String
+    let importance: Int
+    let category: String?
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case focusItemId = "focus_item_id"
+        case title
+        case description
+        case importance
+        case category
+        case createdAt = "created_at"
+    }
+}
+
+struct FocusAnalysis: Identifiable, Codable {
+    let id: UUID
+    let focusItemId: UUID
+    let userId: UUID
+    let title: String
+    let summary: String?
+    let keyFindings: [String]?
+    let priceAnalysis: String?
+    let correlationAnalysis: String?
+    let actionSuggestions: [String]?
+    let riskLevel: String?
+    let confidence: Int?
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case focusItemId = "focus_item_id"
+        case userId = "user_id"
+        case title
+        case summary
+        case keyFindings = "key_findings"
+        case priceAnalysis = "price_analysis"
+        case correlationAnalysis = "correlation_analysis"
+        case actionSuggestions = "action_suggestions"
+        case riskLevel = "risk_level"
+        case confidence
+        case createdAt = "created_at"
+    }
+}
+
+struct EventAnalysis: Identifiable, Codable {
+    let id: UUID
+    let eventId: UUID
+    let title: String
+    let eventSummary: String?
+    let impactAnalysis: String?
+    let affectedAssets: [String]?
+    let marketReaction: String?
+    let futureOutlook: String?
+    let keyTakeaways: [String]?
+    let severity: String?
+    let confidence: Int?
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case eventId = "event_id"
+        case title
+        case eventSummary = "event_summary"
+        case impactAnalysis = "impact_analysis"
+        case affectedAssets = "affected_assets"
+        case marketReaction = "market_reaction"
+        case futureOutlook = "future_outlook"
+        case keyTakeaways = "key_takeaways"
+        case severity
+        case confidence
+        case createdAt = "created_at"
     }
 }
 

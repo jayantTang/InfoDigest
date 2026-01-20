@@ -8,7 +8,7 @@ struct InfoDigestApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView_v2()
+            ContentView()
                 .environmentObject(pushNotificationManager)
                 .onAppear {
                     pushNotificationManager.requestAuthorization()

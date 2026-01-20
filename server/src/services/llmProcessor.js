@@ -342,3 +342,8 @@ function generateFallbackStockSummary(stockData) {
 export function reinitializeLLM() {
   initializeLLMClient();
 }
+
+/**
+ * Export callLLM for other services to use
+ */
+export { callLLM };
