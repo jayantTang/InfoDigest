@@ -6,7 +6,8 @@
  */
 
 import BaseCollector from './baseCollector.js';
-import yahooFinance from 'yahoo-finance2';
+import YahooFinance from 'yahoo-finance2';
+import SinaCollector from './sinaCollector.js';
 import { pool } from '../../config/database.js';
 import logger from '../../config/logger.js';
 
@@ -14,9 +15,16 @@ class IndexCollector extends BaseCollector {
   constructor(config = {}) {
     super('Index Collector', {
       sourceType: 'index',
-      apiKey: config.apiKey || process.env.STOCK_API_KEY || '',
+      apiKey: config.apiKey || process.env.ALPHA_VANTAGE_API_KEY || process.env.STOCK_API_KEY || '',
+      baseUrl: 'https://www.alphavantage.co/query',
       ...config,
     });
+
+    // Initialize Yahoo Finance instance
+    this.yahooFinance = new YahooFinance();
+
+    // Initialize Sina Finance as fallback
+    this.sinaCollector = new SinaCollector();
 
     // Define indices to collect
     this.indices = {
@@ -136,14 +144,14 @@ class IndexCollector extends BaseCollector {
   }
 
   /**
-   * Fetch index data from Yahoo Finance
+   * Fetch index data from Yahoo Finance with Sina Finance fallback
    * @param {Object} index - Index config object
    */
   async fetchFromYahoo(index) {
     try {
       logger.debug(`Fetching ${index.symbol} from Yahoo Finance`);
 
-      const quote = await yahooFinance.quote(index.symbol, {
+      const quote = await this.yahooFinance.quote(index.symbol, {
         fields: ['regularMarketPrice', 'regularMarketTime', 'regularMarketChange', 'regularMarketChangePercent'],
       });
 
@@ -173,7 +181,27 @@ class IndexCollector extends BaseCollector {
         timestamp: timestamp.toISOString(),
       });
     } catch (error) {
-      logger.error(`Yahoo Finance fetch failed for ${index.symbol}`, {
+      logger.warn(`Yahoo Finance fetch failed for ${index.symbol}, trying Sina Finance`, {
+        error: error.message,
+      });
+
+      // Fallback to Sina Finance for A-stock indices
+      if (this.sinaCollector.isSupported(index.symbol)) {
+        try {
+          logger.info(`Falling back to Sina Finance for ${index.symbol}`);
+          const data = await this.sinaCollector.fetchIndex(index.symbol);
+          await this.sinaCollector.savePriceData(data);
+          logger.info(`Successfully fetched ${index.symbol} from Sina Finance (fallback)`);
+          return;
+        } catch (sinaError) {
+          logger.error(`Sina Finance fallback also failed for ${index.symbol}`, {
+            error: sinaError.message,
+          });
+        }
+      }
+
+      // If we reach here, both sources failed
+      logger.error(`All data sources failed for ${index.symbol}`, {
         error: error.message,
       });
       throw error;
@@ -191,8 +219,13 @@ class IndexCollector extends BaseCollector {
 
       const url = `${this.config.baseUrl}?function=GLOBAL_QUOTE&symbol=${index.symbol}&apikey=${this.config.apiKey}`;
 
-      const response = await fetchWithRetry(() => fetch(url));
-      const data = await response.json();
+      const data = await this.fetchWithRetry(async () => {
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        return res.json();
+      });
 
       if (data['Global Quote'] && data['Global Quote']['01. symbol']) {
         const quote = data['Global Quote'];
