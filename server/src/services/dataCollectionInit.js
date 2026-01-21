@@ -11,6 +11,7 @@ import TechnicalIndicatorCollector from './collectors/technicalIndicatorCollecto
 import SectorCollector from './collectors/sectorCollector.js';
 import MacroCollector from './collectors/macroCollector.js';
 import IndexCollector from './collectors/indexCollector.js';
+import CommoditiesCollector from './collectors/commoditiesCollector.js';
 import logger from '../config/logger.js';
 
 /**
@@ -48,8 +49,12 @@ export async function initializeDataCollectors() {
     const indexCollector = new IndexCollector();
     dataCollector.registerCollector('Index', indexCollector);
 
+    // Commodities Collector (Gold, Oil)
+    const commoditiesCollector = new CommoditiesCollector();
+    dataCollector.registerCollector('Commodities', commoditiesCollector);
+
     logger.info('All data collectors registered successfully', {
-      count: 7,
+      count: 8,
       collectors: Array.from(dataCollector.collectors.keys()),
     });
 
