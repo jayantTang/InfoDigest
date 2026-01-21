@@ -145,7 +145,10 @@ struct OpportunitiesView: View {
                     .padding()
             } else {
                 ForEach(viewModel.marketEvents) { event in
-                    MarketEventCard(event: event)
+                    NavigationLink(destination: MarketEventDetailView(event: event)) {
+                        MarketEventCard(event: event)
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
             }
         }

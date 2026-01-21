@@ -288,6 +288,8 @@ router.get(
         id,
         title,
         description,
+        url,
+        urls,
         symbols,
         sectors,
         category,
@@ -316,6 +318,50 @@ router.get(
       events: result.rows,
       count: result.rows.length,
     });
+  })
+);
+
+/**
+ * GET /api/monitoring/events/:id/analysis
+ * Get LLM analysis for a specific event
+ */
+router.get(
+  '/events/:id/analysis',
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    // Check if analysis already exists
+    const existingAnalysis = await pool.query(
+      'SELECT * FROM event_analyses WHERE event_id = $1',
+      [id]
+    );
+
+    if (existingAnalysis.rows.length > 0) {
+      return res.success(existingAnalysis.rows[0]);
+    }
+
+    // Analysis doesn't exist, generate it
+    try {
+      const eventResult = await pool.query(
+        'SELECT * FROM news_events WHERE id = $1',
+        [id]
+      );
+
+      if (eventResult.rows.length === 0) {
+        return res.error('Event not found', 404);
+      }
+
+      const event = eventResult.rows[0];
+
+      // Import the analysis service
+      const llmAnalysisService = (await import('../services/llmAnalysisService.js')).default;
+      const analysis = await llmAnalysisService.generateEventAnalysis(event);
+
+      return res.success(analysis);
+    } catch (error) {
+      logger.error('Failed to generate event analysis:', error);
+      return res.error('Failed to generate analysis', 500);
+    }
   })
 );
 

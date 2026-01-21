@@ -20,6 +20,8 @@ class OpportunitiesViewModel: ObservableObject {
         let title: String
         let description: String
         let source: String?
+        let url: String?
+        let urls: [String]?
         let category: String
         let importanceScore: Int
         let publishedAt: Date
@@ -33,6 +35,8 @@ class OpportunitiesViewModel: ObservableObject {
             case title
             case description
             case source
+            case url
+            case urls
             case category
             case importanceScore = "importance_score"
             case publishedAt = "published_at"
@@ -40,6 +44,18 @@ class OpportunitiesViewModel: ObservableObject {
             case symbols
             case sectors
             case isProcessed = "is_processed"
+        }
+
+        // 便捷属性：获取所有链接
+        var allURLs: [String] {
+            var result = [String]()
+            if let url = url {
+                result.append(url)
+            }
+            if let urls = urls {
+                result.append(contentsOf: urls)
+            }
+            return result
         }
     }
 
@@ -151,8 +167,21 @@ class OpportunitiesViewModel: ObservableObject {
 
             // 只显示高分事件（>= 60分）
             await MainActor.run {
-                marketEvents = result.data.events.filter { $0.importanceScore >= 60 }
-                print("✅ 过滤后显示 \(marketEvents.count) 个高分事件")
+                // 先过滤分数
+                let filteredEvents = result.data.events.filter { $0.importanceScore >= 60 }
+
+                // 基于标题去重，保留最新的
+                var seenTitles = Set<String>()
+                marketEvents = filteredEvents.filter { event in
+                    if seenTitles.contains(event.title) {
+                        return false
+                    } else {
+                        seenTitles.insert(event.title)
+                        return true
+                    }
+                }
+
+                print("✅ 过滤后显示 \(marketEvents.count) 个高分事件（已去重）")
             }
         } catch {
             await MainActor.run {
@@ -257,6 +286,28 @@ class OpportunitiesViewModel: ObservableObject {
             await loadOpportunities()
         }
     }
+
+    func loadEventAnalysis(eventId: UUID) async throws -> EventAnalysis {
+        let urlString = "\(apiService.baseURL)/monitoring/events/\(eventId.uuidString)/analysis"
+        guard let url = URL(string: urlString) else {
+            throw URLError(.badURL)
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            throw URLError(.init(rawValue: (response as? HTTPURLResponse)?.statusCode ?? 500))
+        }
+
+        let decoder = apiService.decoder
+        let result = try decoder.decode(EventAnalysisResponse.self, from: data)
+        return result.data
+    }
 }
 
 // MARK: - Response Models
@@ -284,4 +335,9 @@ struct FocusAnalysesResponse: Codable {
 struct AnalysisStatsResponse: Codable {
     let success: Bool
     let data: OpportunitiesViewModel.AnalysisStats
+}
+
+struct EventAnalysisResponse: Codable {
+    let success: Bool
+    let data: EventAnalysis
 }
