@@ -79,7 +79,19 @@ struct EconomicIndicatorView: View {
             Text("更新于 \(viewModel.formattedLastUpdateTime)")
                 .font(.caption)
                 .foregroundColor(.secondary)
+
             Spacer()
+
+            if !viewModel.nextRefreshCountdown.isEmpty {
+                HStack(spacing: 4) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.caption2)
+                    Text(viewModel.nextRefreshCountdown)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.blue)
+                }
+            }
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
@@ -274,9 +286,22 @@ struct IndexCard: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
 
-                Text(index.symbol)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                HStack(spacing: 4) {
+                    Text(index.symbol)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    // 显示估算标记
+                    if index.isEstimated {
+                        Text("估算")
+                            .font(.caption2)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(Color.orange.opacity(0.2))
+                            .foregroundColor(.orange)
+                            .cornerRadius(3)
+                    }
+                }
             }
 
             Spacer()

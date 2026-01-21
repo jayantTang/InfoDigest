@@ -15,11 +15,11 @@ const router = express.Router();
 // Apply response helpers middleware
 router.use(responseHelpers);
 
-// In-memory cache (10-minute TTL)
+// In-memory cache (30-minute TTL)
 let cache = {
   data: null,
   timestamp: null,
-  ttl: 10 * 60 * 1000, // 10 minutes
+  ttl: 30 * 60 * 1000, // 30 minutes
 };
 
 /**
@@ -122,6 +122,7 @@ async function fetchIndexData(symbols, category) {
       symbol,
       close_price as price,
       timestamp,
+      is_estimated,
       EXTRACT(EPOCH FROM ($2 - timestamp)) / 60 as minutes_ago
     FROM prices
     WHERE symbol = ANY($1)
@@ -150,6 +151,7 @@ async function fetchIndexData(symbols, category) {
     price: parseFloat(row.price),
     timestamp: row.timestamp,
     isStale: parseInt(row.minutes_ago) > 15, // Consider stale if > 15 minutes
+    isEstimated: row.is_estimated || false, // Include estimated status
   }));
 }
 

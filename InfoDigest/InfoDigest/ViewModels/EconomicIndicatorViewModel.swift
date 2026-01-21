@@ -14,11 +14,14 @@ class EconomicIndicatorViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var lastUpdateTime: Date?
     @Published var isLoading = true
+    @Published var nextRefreshCountdown: String = ""
 
     // MARK: - Private Properties
 
     private let apiService = APIService.shared
     private var cancellables = Set<AnyCancellable>()
+    private var countdownTimer: Timer?
+    private let refreshInterval: TimeInterval = 30 * 60 // 30 minutes in seconds
 
     // MARK: - Initialization
 
@@ -30,6 +33,16 @@ class EconomicIndicatorViewModel: ObservableObject {
         Task {
             await loadIndicators()
         }
+
+        // 启动倒计时
+        startCountdownTimer()
+    }
+
+    // MARK: - Deinitialization
+
+    deinit {
+        countdownTimer?.invalidate()
+        countdownTimer = nil
     }
 
     // MARK: - Public Methods
@@ -106,6 +119,48 @@ class EconomicIndicatorViewModel: ObservableObject {
     /// 所有指数数据的总数
     var totalIndicesCount: Int {
         aStockIndices.count + usEtfIndices.count + commodities.count + forex.count
+    }
+
+    // MARK: - Private Methods
+
+    /// 启动倒计时定时器
+    private func startCountdownTimer() {
+        // 停止之前的timer
+        countdownTimer?.invalidate()
+
+        // 每秒更新一次倒计时
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.updateCountdown()
+        }
+
+        // 立即更新一次
+        updateCountdown()
+    }
+
+    /// 更新倒计时显示
+    private func updateCountdown() {
+        guard let lastUpdate = lastUpdateTime else {
+            nextRefreshCountdown = ""
+            return
+        }
+
+        let now = Date()
+        let elapsed = now.timeIntervalSince(lastUpdate)
+        let remaining = refreshInterval - elapsed
+
+        if remaining <= 0 {
+            nextRefreshCountdown = "即将刷新"
+        } else if remaining < 60 {
+            nextRefreshCountdown = "\(Int(remaining))秒后刷新"
+        } else if remaining < 3600 {
+            let minutes = Int(remaining / 60)
+            let seconds = Int(remaining.truncatingRemainder(dividingBy: 60))
+            nextRefreshCountdown = "\(minutes)分\(seconds)秒后刷新"
+        } else {
+            let hours = Int(remaining / 3600)
+            let minutes = Int((remaining.truncatingRemainder(dividingBy: 3600)) / 60)
+            nextRefreshCountdown = "\(hours)小时\(minutes)分后刷新"
+        }
     }
 
     // MARK: - Sample Data (for preview)

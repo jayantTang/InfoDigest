@@ -36,15 +36,22 @@ struct IndexData: Identifiable, Codable {
     let price: Double
     let timestamp: Date
     let isStale: Bool
+    let isEstimated: Bool
+
+    // CodingKeys enum for JSON decoding
+    private enum CodingKeys: String, CodingKey {
+        case id, symbol, name, price, timestamp, isStale, isEstimated
+    }
 
     /// 自定义初始化器（用于创建示例数据）
-    init(symbol: String, name: String, price: Double, timestamp: Date, isStale: Bool) {
+    init(symbol: String, name: String, price: Double, timestamp: Date, isStale: Bool, isEstimated: Bool = false) {
         self.id = UUID()
         self.symbol = symbol
         self.name = name
         self.price = price
         self.timestamp = timestamp
         self.isStale = isStale
+        self.isEstimated = isEstimated
     }
 
     /// 自定义解码器，处理服务器返回的字段
@@ -71,6 +78,7 @@ struct IndexData: Identifiable, Codable {
         }
 
         self.isStale = try container.decodeIfPresent(Bool.self, forKey: .isStale) ?? false
+        self.isEstimated = try container.decodeIfPresent(Bool.self, forKey: .isEstimated) ?? false
     }
 
     /// 计算属性：格式化的价格字符串
@@ -89,10 +97,19 @@ struct IndexData: Identifiable, Codable {
 
     /// 计算属性：相对时间字符串
     var formattedTime: String {
+        let now = Date()
+        let timeInterval = now.timeIntervalSince(timestamp)
+
+        // 如果小于1分钟，显示"刚刚"
+        if timeInterval < 60 {
+            return "刚刚"
+        }
+
+        // 否则使用相对日期格式化器
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         formatter.locale = Locale(identifier: "zh_CN")
-        return formatter.localizedString(for: timestamp, relativeTo: Date())
+        return formatter.localizedString(for: timestamp, relativeTo: now)
     }
 
     /// 计算属性：市场类型
