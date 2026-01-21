@@ -10,6 +10,7 @@ import NewsCollector from './collectors/newsCollector.js';
 import TechnicalIndicatorCollector from './collectors/technicalIndicatorCollector.js';
 import SectorCollector from './collectors/sectorCollector.js';
 import MacroCollector from './collectors/macroCollector.js';
+import IndexCollector from './collectors/indexCollector.js';
 import logger from '../config/logger.js';
 
 /**
@@ -43,8 +44,12 @@ export async function initializeDataCollectors() {
     const macroCollector = new MacroCollector();
     dataCollector.registerCollector('FRED', macroCollector);
 
+    // Index Collector (A-shares, US ETFs, Commodities, Forex)
+    const indexCollector = new IndexCollector();
+    dataCollector.registerCollector('Index', indexCollector);
+
     logger.info('All data collectors registered successfully', {
-      count: 6,
+      count: 7,
       collectors: Array.from(dataCollector.collectors.keys()),
     });
 

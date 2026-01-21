@@ -7,6 +7,7 @@ struct ContentView: View {
 
     enum TabSelection {
         case opportunities  // 主页
+        case economic      // 经济形势
         case more          // 更多功能
     }
 
@@ -18,6 +19,13 @@ struct ContentView: View {
                     Label("投资机会", systemImage: "lightbulb.fill")
                 }
                 .tag(TabSelection.opportunities)
+
+            // 经济形势
+            EconomicIndicatorView()
+                .tabItem {
+                    Label("经济形势", systemImage: "chart.bar.fill")
+                }
+                .tag(TabSelection.economic)
 
             // 更多功能
             MoreFeaturesView()
@@ -42,6 +50,10 @@ struct MoreFeaturesView: View {
                 Section(header: Text("核心功能")) {
                     NavigationLink(destination: DashboardView().navigationTitle("仪表板")) {
                         Label("仪表板", systemImage: "chart.bar.doc.horizontal")
+                    }
+
+                    NavigationLink(destination: EconomicIndicatorView().navigationTitle("经济形势")) {
+                        Label("经济形势", systemImage: "chart.bar.fill")
                     }
 
                     NavigationLink(destination: OpportunitiesView().navigationTitle("投资机会")) {

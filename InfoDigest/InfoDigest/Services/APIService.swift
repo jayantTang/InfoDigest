@@ -726,6 +726,12 @@ class APIService {
         return try decoder.decode(APIResponse<MonitoringMetrics>.self, from: data).data!
     }
 
+    /// 获取经济指标数据
+    func getEconomicIndicators() async throws -> EconomicIndicators {
+        let (data, _) = try await fetchData(endpoint: "/economic-indicators")
+        return try decoder.decode(APIResponse<EconomicIndicators>.self, from: data).data!
+    }
+
     // MARK: - Helper Methods
 
     private func fetchData(endpoint: String) async throws -> (Data, URLResponse) {

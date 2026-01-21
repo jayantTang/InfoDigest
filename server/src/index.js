@@ -17,6 +17,7 @@ import dataCollectionRouter from './routes/dataCollection.js';
 import monitoringRouter from './routes/monitoring.js';
 import analysisRouter from './routes/analysis.js';
 import marketEventsRouter from './routes/marketEvents.js';
+import economicIndicatorsRouter from './routes/economicIndicators.js';
 import TaskScheduler from './services/scheduler.js';
 import { sendTestPush } from './services/pushService.js';
 import { initializeDataCollectors } from './services/dataCollectionInit.js';
@@ -98,6 +99,7 @@ app.use('/api/data-collection', apiLimiter, dataCollectionRouter);
 app.use('/api/monitoring', apiLimiter, monitoringRouter);
 app.use('/api/analysis', apiLimiter, analysisRouter);
 app.use('/api/market-events', apiLimiter, marketEventsRouter);
+app.use('/api/economic-indicators', apiLimiter, economicIndicatorsRouter);
 
 // Admin/Debug routes (protected in all environments)
 const adminRouter = express.Router();
