@@ -378,6 +378,48 @@ struct MacroDataCard: View {
     }
 }
 
+// MARK: - Price Change Label Component
+
+struct PriceChangeLabel: View {
+    let period: String      // "1天", "1周", etc.
+    let value: String?      // "+2.5" or "-0.8" or nil
+    let available: Bool     // Whether data is available
+
+    var body: some View {
+        HStack(spacing: 2) {
+            Text(period)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+
+            if available, let value = value {
+                Text(value + "%")
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(colorForValue(value))
+            } else {
+                Text("N/A")
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+            }
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(4)
+        .opacity(available ? 1.0 : 0.6)
+    }
+
+    private func colorForValue(_ value: String) -> Color {
+        if value.hasPrefix("+") {
+            return .red  // 涨
+        } else if value.hasPrefix("-") {
+            return .green  // 跌
+        } else {
+            return .secondary
+        }
+    }
+}
+
 // MARK: - Preview
 
 #Preview {
