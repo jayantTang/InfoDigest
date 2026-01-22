@@ -346,7 +346,7 @@ struct HistoricalChangesResponse: Codable {
         let threeYears: ChangeData?
 
         struct ChangeData: Codable {
-            let value: String
+            let value: String?     // Optional: may be nil when available=false
             let available: Bool
         }
 

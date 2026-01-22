@@ -162,7 +162,7 @@ struct IndexData: Identifiable, Codable {
         let threeYears: ChangeData?
 
         struct ChangeData: Codable {
-            let value: String      // "+2.5" or "-0.8"
+            let value: String?     // Optional: may be nil when available=false
             let available: Bool
         }
 
