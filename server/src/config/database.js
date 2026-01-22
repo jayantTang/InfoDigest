@@ -49,3 +49,27 @@ export const testConnection = async () => {
     return false;
   }
 };
+
+/**
+ * Create indexes for historical price queries
+ */
+export async function createHistoricalPriceIndexes() {
+  const queries = [
+    `CREATE INDEX IF NOT EXISTS idx_prices_symbol_timestamp
+     ON prices(symbol, timestamp DESC)`,
+  ];
+
+  for (const query of queries) {
+    try {
+      await pool.query(query);
+      logger.info('Index created successfully');
+    } catch (error) {
+      if (error.message.includes('already exists')) {
+        logger.info('Index already exists');
+      } else {
+        logger.error('Failed to create index', { error: error.message });
+        throw error;
+      }
+    }
+  }
+}
