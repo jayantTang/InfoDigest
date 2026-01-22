@@ -22,6 +22,7 @@ export default {
   apiKeys: {
     news: process.env.NEWS_API_KEY,
     stock: process.env.STOCK_API_KEY,
+    alphaVantage: process.env.ALPHA_VANTAGE_API_KEY || 'demo',
     deepseek: process.env.DEEPSEEK_API_KEY,
     openai: process.env.OPENAI_API_KEY,
     anthropic: process.env.ANTHROPIC_API_KEY,

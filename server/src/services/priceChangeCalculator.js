@@ -1,13 +1,15 @@
 import { pool } from '../config/database.js';
 import logger from '../config/logger.js';
+import historicalPriceFetcher from './historicalPriceFetcher.js';
 
 /**
  * Historical Price Change Calculator
  * Calculates price changes for different time periods
+ * Implements lazy-loading strategy: fetch from DB first, fallback to API
  */
 class PriceChangeCalculator {
   /**
-   * Get price from N days ago
+   * Get price from N days ago with lazy-loading
    * @param {string} symbol - Stock/index symbol
    * @param {number} daysAgo - Number of days to look back
    * @returns {Promise<number|null>} Price or null if not found
@@ -22,6 +24,7 @@ class PriceChangeCalculator {
     }
 
     try {
+      // Step 1: Try to get from database first
       const query = `
         SELECT close_price
         FROM prices
@@ -34,11 +37,36 @@ class PriceChangeCalculator {
 
       const result = await pool.query(query, [symbol]);
 
-      if (result.rows.length === 0) {
-        return null;
+      if (result.rows.length > 0) {
+        return parseFloat(result.rows[0].close_price);
       }
 
-      return parseFloat(result.rows[0].close_price);
+      // Step 2: Not in database, fetch from external API
+      logger.info('Historical price not found in database, fetching from API', {
+        symbol,
+        daysAgo,
+      });
+
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() - daysAgo);
+
+      const price = await historicalPriceFetcher.fetchHistoricalPrice(symbol, targetDate);
+
+      if (price !== null) {
+        logger.info('Successfully fetched and saved historical price', {
+          symbol,
+          daysAgo,
+          price,
+        });
+        return price;
+      }
+
+      // Step 3: API also failed, return null
+      logger.warn('Could not fetch historical price from database or API', {
+        symbol,
+        daysAgo,
+      });
+      return null;
     } catch (error) {
       logger.error('Failed to get historical price', {
         symbol,
