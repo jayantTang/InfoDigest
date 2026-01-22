@@ -4,60 +4,38 @@
  */
 
 import express from 'express';
+import { responseHelpers } from '../middleware/responseFormatter.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import priceChangeCalculator from '../services/priceChangeCalculator.js';
 import logger from '../config/logger.js';
 
 const router = express.Router();
 
+router.use(responseHelpers);
+
 /**
- * GET /api/historical-changes/:symbol/history
+ * GET /api/historical-changes/:symbol
  * Get historical price changes for a specific symbol
  * @param {string} symbol - Stock/index symbol (e.g., "000001.SS", "SPY")
  */
 router.get(
-  '/:symbol/history',
+  '/:symbol',
   asyncHandler(async (req, res) => {
     const { symbol } = req.params;
 
-    // Validate symbol parameter
-    if (!symbol || typeof symbol !== 'string') {
-      logger.warn('Invalid symbol parameter', { symbol });
-      return res.status(400).json({
-        success: false,
-        error: 'Symbol parameter is required and must be a string',
-      });
-    }
+    logger.info('Fetching historical changes', { symbol });
 
-    logger.info('Fetching historical price changes', { symbol });
+    const changes = await priceChangeCalculator.calculatePriceChange(symbol);
 
-    try {
-      // Calculate price changes for all time periods
-      const changes = await priceChangeCalculator.calculatePriceChange(symbol);
+    logger.info('Historical changes retrieved', {
+      symbol,
+      availablePeriods: Object.values(changes).filter(c => c.available).length,
+    });
 
-      logger.info('Historical price changes fetched successfully', {
-        symbol,
-        periods: Object.keys(changes).length,
-      });
-
-      return res.json({
-        success: true,
-        data: {
-          symbol,
-          changes,
-        },
-      });
-    } catch (error) {
-      logger.error('Failed to fetch historical price changes', {
-        symbol,
-        error: error.message,
-      });
-
-      return res.status(500).json({
-        success: false,
-        error: error.message || 'Failed to calculate historical price changes',
-      });
-    }
+    return res.success({
+      symbol,
+      changes,
+    });
   })
 );
 
