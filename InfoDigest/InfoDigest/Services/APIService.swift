@@ -333,6 +333,34 @@ struct MonitoringData: Codable {
     let monitoring: MonitoringStatus
 }
 
+struct HistoricalChangesResponse: Codable {
+    let success: Bool
+    let data: PriceChangesData
+
+    struct PriceChangesData: Codable {
+        let oneDay: ChangeData?
+        let oneWeek: ChangeData?
+        let oneMonth: ChangeData?
+        let threeMonths: ChangeData?
+        let oneYear: ChangeData?
+        let threeYears: ChangeData?
+
+        struct ChangeData: Codable {
+            let value: String
+            let available: Bool
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case oneDay = "1d"
+            case oneWeek = "1w"
+            case oneMonth = "1m"
+            case threeMonths = "3m"
+            case oneYear = "1y"
+            case threeYears = "3y"
+        }
+    }
+}
+
 // MARK: - Message Response Types (v1 compatibility)
 private struct MessageResponse: Codable {
     let success: Bool
@@ -732,6 +760,19 @@ class APIService {
         return try decoder.decode(APIResponse<EconomicIndicators>.self, from: data).data!
     }
 
+    /// 获取某个指数的历史涨跌幅
+    func getHistoricalChanges(symbol: String) async throws -> HistoricalChangesResponse.PriceChangesData {
+        let endpoint = "/api/historical-changes/\(symbol)"
+
+        let response: HistoricalChangesResponse = try await performRequest(endpoint: endpoint)
+
+        if !response.success {
+            throw APIError.requestFailed("Failed to fetch historical changes")
+        }
+
+        return response.data
+    }
+
     // MARK: - Helper Methods
 
     private func fetchData(endpoint: String) async throws -> (Data, URLResponse) {
@@ -740,6 +781,21 @@ class APIService {
         }
 
         return try await session.data(from: url)
+    }
+
+    private func performRequest<T: Codable>(endpoint: String) async throws -> T {
+        let (data, response) = try await fetchData(endpoint: endpoint)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.invalidResponse
+        }
+
+        do {
+            return try decoder.decode(T.self, from: data)
+        } catch {
+            throw APIError.decodingError
+        }
     }
 }
 
@@ -879,6 +935,7 @@ enum APIError: Error, LocalizedError {
     case invalidResponse
     case decodingError
     case networkError(Error)
+    case requestFailed(String)
 
     var errorDescription: String? {
         switch self {
@@ -890,6 +947,8 @@ enum APIError: Error, LocalizedError {
             return "数据解析错误"
         case .networkError(let error):
             return "网络错误: \(error.localizedDescription)"
+        case .requestFailed(let message):
+            return message
         }
     }
 }
