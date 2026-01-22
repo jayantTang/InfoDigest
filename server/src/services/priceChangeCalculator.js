@@ -13,6 +13,14 @@ class PriceChangeCalculator {
    * @returns {Promise<number|null>} Price or null if not found
    */
   async getPriceAt(symbol, daysAgo) {
+    // Input validation to prevent SQL injection
+    if (!symbol || typeof symbol !== 'string') {
+      throw new Error('Symbol must be a non-empty string');
+    }
+    if (!Number.isInteger(daysAgo) || daysAgo < 1 || daysAgo > 10000) {
+      throw new Error('daysAgo must be a positive integer');
+    }
+
     try {
       const query = `
         SELECT close_price

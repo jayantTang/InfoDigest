@@ -13,6 +13,35 @@ describe('PriceChangeCalculator', () => {
       const price = await calculator.getPriceAt('INVALID.SS', 7);
       assert.strictEqual(price, null, 'Price should be null for invalid symbol');
     });
+
+    it('should throw error for invalid daysAgo parameter', async () => {
+      await assert.rejects(
+        calculator.getPriceAt('000001.SS', -1),
+        /daysAgo must be a positive integer/
+      );
+
+      await assert.rejects(
+        calculator.getPriceAt('000001.SS', 0),
+        /daysAgo must be a positive integer/
+      );
+
+      await assert.rejects(
+        calculator.getPriceAt('000001.SS', 1.5),
+        /daysAgo must be a positive integer/
+      );
+    });
+
+    it('should throw error for invalid symbol parameter', async () => {
+      await assert.rejects(
+        calculator.getPriceAt('', 7),
+        /Symbol must be a non-empty string/
+      );
+
+      await assert.rejects(
+        calculator.getPriceAt(null, 7),
+        /Symbol must be a non-empty string/
+      );
+    });
   });
 
   describe('calculatePriceChange', () => {
