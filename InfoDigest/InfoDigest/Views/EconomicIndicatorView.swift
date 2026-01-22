@@ -280,44 +280,87 @@ struct IndexCard: View {
     let index: IndexData
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(index.name)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+        VStack(alignment: .leading, spacing: 8) {
+            // 顶部：名称、符号和价格、时间
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(index.name)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
 
-                HStack(spacing: 4) {
-                    Text(index.symbol)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    HStack(spacing: 4) {
+                        Text(index.symbol)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
 
-                    // 显示估算标记
-                    if index.isEstimated {
-                        Text("估算")
-                            .font(.caption2)
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 1)
-                            .background(Color.orange.opacity(0.2))
-                            .foregroundColor(.orange)
-                            .cornerRadius(3)
+                        // 显示估算标记
+                        if index.isEstimated {
+                            Text("估算")
+                                .font(.caption2)
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 1)
+                                .background(Color.orange.opacity(0.2))
+                                .foregroundColor(.orange)
+                                .cornerRadius(3)
+                        }
                     }
+                }
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(index.formattedPrice)
+                        .font(.headline)
+                        .fontWeight(.bold)
+
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock")
+                            .font(.caption2)
+                        Text(index.formattedTime)
+                            .font(.caption2)
+                    }
+                    .foregroundColor(.secondary)
                 }
             }
 
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 4) {
-                Text(index.formattedPrice)
-                    .font(.headline)
-                    .fontWeight(.bold)
-
-                HStack(spacing: 4) {
-                    Image(systemName: "clock")
-                        .font(.caption2)
-                    Text(index.formattedTime)
-                        .font(.caption2)
+            // 新增：涨跌幅显示区域
+            if let changes = index.priceChanges {
+                LazyVGrid(columns: [
+                    GridItem(.flexible()),
+                    GridItem(.flexible()),
+                    GridItem(.flexible())
+                ], spacing: 6) {
+                    PriceChangeLabel(
+                        period: "1天",
+                        value: changes.oneDay?.value,
+                        available: changes.oneDay?.available ?? false
+                    )
+                    PriceChangeLabel(
+                        period: "1周",
+                        value: changes.oneWeek?.value,
+                        available: changes.oneWeek?.available ?? false
+                    )
+                    PriceChangeLabel(
+                        period: "1月",
+                        value: changes.oneMonth?.value,
+                        available: changes.oneMonth?.available ?? false
+                    )
+                    PriceChangeLabel(
+                        period: "3月",
+                        value: changes.threeMonths?.value,
+                        available: changes.threeMonths?.available ?? false
+                    )
+                    PriceChangeLabel(
+                        period: "1年",
+                        value: changes.oneYear?.value,
+                        available: changes.oneYear?.available ?? false
+                    )
+                    PriceChangeLabel(
+                        period: "3年",
+                        value: changes.threeYears?.value,
+                        available: changes.threeYears?.available ?? false
+                    )
                 }
-                .foregroundColor(.secondary)
             }
         }
         .padding(.vertical, 8)
