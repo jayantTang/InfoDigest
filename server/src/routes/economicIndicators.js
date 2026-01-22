@@ -9,6 +9,7 @@ import { pool } from '../config/database.js';
 import { responseHelpers } from '../middleware/responseFormatter.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import logger from '../config/logger.js';
+import priceChangeCalculator from '../services/priceChangeCalculator.js';
 
 const router = express.Router();
 
@@ -20,6 +21,7 @@ let cache = {
   data: null,
   timestamp: null,
   ttl: 30 * 60 * 1000, // 30 minutes
+  version: 2, // Increment when adding new fields to invalidate cache
 };
 
 /**
@@ -145,14 +147,36 @@ async function fetchIndexData(symbols, category) {
     'DX-Y.NYB': '美元指数',
   };
 
-  return result.rows.map(row => ({
-    symbol: row.symbol,
-    name: displayNameMap[row.symbol] || row.symbol,
-    price: parseFloat(row.price),
-    timestamp: row.timestamp,
-    isStale: parseInt(row.minutes_ago) > 15, // Consider stale if > 15 minutes
-    isEstimated: row.is_estimated || false, // Include estimated status
-  }));
+  // Add price changes to each index using parallel processing
+  const indicesWithChanges = await Promise.all(
+    result.rows.map(async (row) => {
+      const indexData = {
+        symbol: row.symbol,
+        name: displayNameMap[row.symbol] || row.symbol,
+        price: parseFloat(row.price),
+        timestamp: row.timestamp,
+        isStale: parseInt(row.minutes_ago) > 15, // Consider stale if > 15 minutes
+        isEstimated: row.is_estimated || false, // Include estimated status
+      };
+
+      // Try to fetch price changes, but don't fail if it errors
+      try {
+        const priceChanges = await priceChangeCalculator.calculatePriceChange(row.symbol);
+        indexData.priceChanges = priceChanges;
+      } catch (error) {
+        logger.warn('Failed to fetch price changes for symbol, continuing without it', {
+          symbol: row.symbol,
+          error: error.message,
+        });
+        // Add empty priceChanges field to maintain consistent structure
+        indexData.priceChanges = null;
+      }
+
+      return indexData;
+    })
+  );
+
+  return indicesWithChanges;
 }
 
 /**
