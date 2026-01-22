@@ -37,14 +37,15 @@ struct IndexData: Identifiable, Codable {
     let timestamp: Date
     let isStale: Bool
     let isEstimated: Bool
+    let priceChanges: PriceChanges?
 
     // CodingKeys enum for JSON decoding
     private enum CodingKeys: String, CodingKey {
-        case id, symbol, name, price, timestamp, isStale, isEstimated
+        case id, symbol, name, price, timestamp, isStale, isEstimated, priceChanges
     }
 
     /// 自定义初始化器（用于创建示例数据）
-    init(symbol: String, name: String, price: Double, timestamp: Date, isStale: Bool, isEstimated: Bool = false) {
+    init(symbol: String, name: String, price: Double, timestamp: Date, isStale: Bool, isEstimated: Bool = false, priceChanges: PriceChanges? = nil) {
         self.id = UUID()
         self.symbol = symbol
         self.name = name
@@ -52,9 +53,11 @@ struct IndexData: Identifiable, Codable {
         self.timestamp = timestamp
         self.isStale = isStale
         self.isEstimated = isEstimated
+        self.priceChanges = priceChanges
     }
 
     /// 自定义解码器，处理服务器返回的字段
+    @_disfavoredOverload
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
@@ -79,6 +82,7 @@ struct IndexData: Identifiable, Codable {
 
         self.isStale = try container.decodeIfPresent(Bool.self, forKey: .isStale) ?? false
         self.isEstimated = try container.decodeIfPresent(Bool.self, forKey: .isEstimated) ?? false
+        self.priceChanges = try container.decodeIfPresent(IndexData.PriceChanges.self, forKey: .priceChanges)
     }
 
     /// 计算属性：格式化的价格字符串
@@ -144,6 +148,32 @@ struct IndexData: Identifiable, Codable {
     /// 计算属性：是否为外汇
     var isForex: Bool {
         symbol.contains("DX-Y.NYB")
+    }
+
+    // MARK: - Nested Types
+
+    /// 历史涨跌幅数据
+    struct PriceChanges: Codable {
+        let oneDay: ChangeData?
+        let oneWeek: ChangeData?
+        let oneMonth: ChangeData?
+        let threeMonths: ChangeData?
+        let oneYear: ChangeData?
+        let threeYears: ChangeData?
+
+        struct ChangeData: Codable {
+            let value: String      // "+2.5" or "-0.8"
+            let available: Bool
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case oneDay = "1d"
+            case oneWeek = "1w"
+            case oneMonth = "1m"
+            case threeMonths = "3m"
+            case oneYear = "1y"
+            case threeYears = "3y"
+        }
     }
 }
 
