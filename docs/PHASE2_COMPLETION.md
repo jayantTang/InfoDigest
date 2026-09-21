@@ -451,7 +451,7 @@ Technical Indicators: 0条 (需要价格数据后计算)
 **注**: 首次全量采集需要运行：
 ```bash
 POST /api/data-collection/collect-all
-Headers: X-API-Key: dev-admin-key-12345
+Headers: X-API-Key: YOUR_ADMIN_KEY
 ```
 
 ---
@@ -468,7 +468,7 @@ STOCK_API_KEY=your_alpha_vantage_key
 COINGECKO_API_KEY=your_coingecko_key
 
 # NewsAPI (新闻)
-NEWS_API_KEY=cc9e5f521cc64efa8f84079b7a4b6c9d
+NEWS_API_KEY=YOUR_NEWSAPI_KEY
 
 # FRED (宏观数据) - 可选
 FRED_API_KEY=your_fred_key

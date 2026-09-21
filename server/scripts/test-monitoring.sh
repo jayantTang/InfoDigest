@@ -13,7 +13,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 BASE_URL="http://localhost:3000"
-API_KEY="dev-admin-key-12345"
+API_KEY="YOUR_ADMIN_KEY"
 
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}InfoDigest v2.0 Monitoring Engine Test${NC}"

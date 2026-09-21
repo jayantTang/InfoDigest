@@ -13,7 +13,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 BASE_URL="http://localhost:3000"
-API_KEY="dev-admin-key-12345"
+API_KEY="YOUR_ADMIN_KEY"
 
 echo -e "${CYAN}╔══════════════════════════════════════════╗${NC}"
 echo -e "${CYAN}║  InfoDigest v2.0 完整演示                 ║${NC}"

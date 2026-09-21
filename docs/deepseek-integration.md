@@ -32,7 +32,7 @@
 ```env
 LLM_PROVIDER=deepseek
 LLM_MODEL=deepseek-chat
-DEEPSEEK_API_KEY=sk-7b132ad9641e45a088beeb8b6520a0fb
+DEEPSEEK_API_KEY=sk-YOUR_DEEPSEEK_KEY
 ```
 
 ## 如何使用

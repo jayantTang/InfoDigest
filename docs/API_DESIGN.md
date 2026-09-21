@@ -1372,7 +1372,7 @@ X-Device-Token: <device_token>
 
 **请求头：**
 ```
-X-API-Key: dev-admin-key-12345
+X-API-Key: YOUR_ADMIN_KEY
 ```
 
 **响应（200）：**
@@ -1405,7 +1405,7 @@ X-API-Key: dev-admin-key-12345
 
 **请求头：**
 ```
-X-API-Key: dev-admin-key-12345
+X-API-Key: YOUR_ADMIN_KEY
 ```
 
 **请求体：**

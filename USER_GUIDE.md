@@ -186,15 +186,15 @@ curl http://localhost:3000/api/temporary-focus?user_id={userId}
 ```bash
 # 触发数据采集（需要Admin API Key）
 curl -X POST http://localhost:3000/api/data-collection/collect-all \
-  -H "X-API-Key: dev-admin-key-12345"
+  -H "X-API-Key: YOUR_ADMIN_KEY"
 
 # 手动执行监控检查
 curl -X POST http://localhost:3000/api/monitoring/check-cycle \
-  -H "X-API-Key: dev-admin-key-12345"
+  -H "X-API-Key: YOUR_ADMIN_KEY"
 
 # 生成AI分析
 curl -X POST http://localhost:3000/api/analysis/strategy/{strategyId}/generate \
-  -H "X-API-Key: dev-admin-key-12345"
+  -H "X-API-Key: YOUR_ADMIN_KEY"
 ```
 
 ---
@@ -259,11 +259,11 @@ curl http://localhost:3000/api/monitoring/metrics
 
 # 启动监控引擎
 curl -X POST http://localhost:3000/api/monitoring/start \
-  -H "X-API-Key: dev-admin-key-12345"
+  -H "X-API-Key: YOUR_ADMIN_KEY"
 
 # 停止监控引擎
 curl -X POST http://localhost:3000/api/monitoring/stop \
-  -H "X-API-Key: dev-admin-key-12345"
+  -H "X-API-Key: YOUR_ADMIN_KEY"
 ```
 
 ### 测试AI分析

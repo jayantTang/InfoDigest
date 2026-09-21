@@ -6,7 +6,7 @@
 set -e
 
 API_URL="http://localhost:3000/api"
-ADMIN_KEY="dev-admin-key-12345"
+ADMIN_KEY="YOUR_ADMIN_KEY"
 
 # Colors for output
 GREEN='\033[0;32m'

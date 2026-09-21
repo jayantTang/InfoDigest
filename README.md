@@ -297,19 +297,19 @@ cd InfoDigest && ./scripts/build-ios.sh
 ```bash
 # 查看监控状态
 curl http://localhost:3000/api/monitoring/status \
-  -H "X-API-Key: dev-admin-key-12345"
+  -H "X-API-Key: YOUR_ADMIN_KEY"
 
 # 启动监控
 curl -X POST http://localhost:3000/api/monitoring/start \
-  -H "X-API-Key: dev-admin-key-12345"
+  -H "X-API-Key: YOUR_ADMIN_KEY"
 
 # 停止监控
 curl -X POST http://localhost:3000/api/monitoring/stop \
-  -H "X-API-Key: dev-admin-key-12345"
+  -H "X-API-Key: YOUR_ADMIN_KEY"
 
 # 手动触发一次检查周期
 curl -X POST http://localhost:3000/api/monitoring/check-cycle \
-  -H "X-API-Key: dev-admin-key-12345"
+  -H "X-API-Key: YOUR_ADMIN_KEY"
 ```
 
 ### 📱 iOS客户端模块
@@ -476,7 +476,7 @@ POST   /api/admin/run-digest               # 手动触发摘要生成
 
 所有管理接口需要在请求头中包含：
 ```http
-X-API-Key: dev-admin-key-12345
+X-API-Key: YOUR_ADMIN_KEY
 ```
 
 ---
@@ -501,13 +501,13 @@ DB_PASSWORD=
 # LLM配置（DeepSeek）
 LLM_PROVIDER=deepseek
 LLM_MODEL=deepseek-chat
-DEEPSEEK_API_KEY=sk-7b132ad9641e45a088beeb8b6520a0fb
+DEEPSEEK_API_KEY=sk-YOUR_DEEPSEEK_KEY
 
 # 备用LLM（OpenAI，可选）
 OPENAI_API_KEY=your_openai_key
 
 # 数据源API密钥
-NEWS_API_KEY=cc9e5f521cc64efa8f84079b7a4b6c9d
+NEWS_API_KEY=YOUR_NEWSAPI_KEY
 ALPHA_VANTAGE_API_KEY=demo
 
 # APNs推送配置
@@ -519,7 +519,7 @@ APNS_PRODUCTION=false
 
 # 安全配置
 JWT_SECRET=your_jwt_secret_change_this
-ADMIN_API_KEYS=dev-admin-key-12345
+ADMIN_API_KEYS=YOUR_ADMIN_KEY
 
 # 定时任务配置
 CRON_SCHEDULE=0 * * * *  # 每小时（v1.0）
@@ -628,19 +628,19 @@ curl http://localhost:3000/health
 ```bash
 # 查看监控状态
 curl http://localhost:3000/api/monitoring/status \
-  -H "X-API-Key: dev-admin-key-12345"
+  -H "X-API-Key: YOUR_ADMIN_KEY"
 
 # 启动监控
 curl -X POST http://localhost:3000/api/monitoring/start \
-  -H "X-API-Key: dev-admin-key-12345"
+  -H "X-API-Key: YOUR_ADMIN_KEY"
 
 # 停止监控
 curl -X POST http://localhost:3000/api/monitoring/stop \
-  -H "X-API-Key: dev-admin-key-12345"
+  -H "X-API-Key: YOUR_ADMIN_KEY"
 
 # 手动触发检查
 curl -X POST http://localhost:3000/api/monitoring/check-cycle \
-  -H "X-API-Key: dev-admin-key-12345"
+  -H "X-API-Key: YOUR_ADMIN_KEY"
 ```
 
 ### 数据库操作
@@ -730,12 +730,12 @@ ios-deploy --bundle build/Build/Products/Debug-iphoneos/InfoDigest.app
 # 发送测试推送
 curl -X POST http://localhost:3000/api/admin/test-push \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: dev-admin-key-12345" \
+  -H "X-API-Key: YOUR_ADMIN_KEY" \
   -d '{"title":"测试推送","message":"这是一条测试消息"}'
 
 # 手动触发v1.0摘要生成
 curl -X POST http://localhost:3000/api/admin/run-digest \
-  -H "X-API-Key: dev-admin-key-12345"
+  -H "X-API-Key: YOUR_ADMIN_KEY"
 ```
 
 ---
@@ -763,7 +763,7 @@ curl -X POST http://localhost:3000/api/admin/run-digest \
 4. **测试推送**
    ```bash
    curl -X POST http://localhost:3000/api/admin/test-push \
-     -H "X-API-Key: dev-admin-key-12345"
+     -H "X-API-Key: YOUR_ADMIN_KEY"
    ```
 
 ### iOS应用无法连接服务器
@@ -787,7 +787,7 @@ curl -X POST http://localhost:3000/api/admin/run-digest \
 1. **检查监控状态**
    ```bash
    curl http://localhost:3000/api/monitoring/status \
-     -H "X-API-Key: dev-admin-key-12345"
+     -H "X-API-Key: YOUR_ADMIN_KEY"
    ```
 
 2. **查看监控日志**
@@ -798,7 +798,7 @@ curl -X POST http://localhost:3000/api/admin/run-digest \
 3. **手动触发检查**
    ```bash
    curl -X POST http://localhost:3000/api/monitoring/check-cycle \
-     -H "X-API-Key: dev-admin-key-12345"
+     -H "X-API-Key: YOUR_ADMIN_KEY"
    ```
 
 ### LLM分析失败

@@ -52,7 +52,7 @@ test_endpoint "获取设备" "GET" "/api/devices" ""
 echo ""
 echo "3. 管理端点测试"
 test_endpoint "手动触发摘要" "POST" "/api/admin/run-digest" "" \
-    -H "X-API-Key: dev-admin-key-12345"
+    -H "X-API-Key: YOUR_ADMIN_KEY"
 
 echo ""
 echo "=== 测试完成 ==="

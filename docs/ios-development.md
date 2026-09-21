@@ -48,7 +48,7 @@ xcodebuild -project InfoDigest.xcodeproj \
 # 发送测试推送
 curl -X POST http://localhost:3000/api/admin/test-push \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: dev-admin-key-12345" \
+  -H "X-API-Key: YOUR_ADMIN_KEY" \
   -d '{"title":"测试","message":"测试消息"}'
 ```
 
@@ -328,6 +328,6 @@ tail -f server/logs/combined.log
 # 发送测试推送
 curl -X POST http://localhost:3000/api/admin/test-push \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: dev-admin-key-12345" \
+  -H "X-API-Key: YOUR_ADMIN_KEY" \
   -d '{"title":"测试","message":"测试消息"}'
 ```

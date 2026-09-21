@@ -16,7 +16,7 @@ fi
 echo "📤 发送测试推送..."
 RESPONSE=$(curl -X POST http://localhost:3000/api/admin/test-push \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: dev-admin-key-12345" \
+  -H "X-API-Key: YOUR_ADMIN_KEY" \
   -d '{"title":"🎉 测试推送","message":"这是一条测试消息"}' \
   -s)
 
